@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="tr" class="dark scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NutuVocabulary — Vision</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        background: '#030303',
+                        surface: 'rgba(255, 255, 255, 0.03)',
+                        border: 'rgba(255, 255, 255, 0.08)',
+                        accent: {
+                            DEFAULT: '#8A2BE2',
+                            light: '#A855F7',
+                            glow: 'rgba(138, 43, 226, 0.4)'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['"Inter"', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+                        serif: ['"Inria Serif"', 'serif'],
+                        mono: ['"JetBrains Mono"', 'monospace'],
+                    },
+                    animation: {
+                        'float': 'float 6s ease-in-out infinite',
+                        'pulse-glow': 'pulseGlow 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-20px)' },
+                        },
+                        pulseGlow: {
+                            '0%, 100%': { opacity: 0.5 },
+                            '50%': { opacity: 0.8 },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inria+Serif:wght@300;400;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        :root { color-scheme: dark; }
+
+        body {
+            background-color: theme('colors.background');
+            color: #f5f5f7;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* 21st.dev Ambient Glowing Grid Background */
+        .ambient-grid {
+            position: fixed;
+            inset: 0;
+            background-image: 
+                linear-gradient(to right, rgba(255,255,255,0.03) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255,255,255,0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            mask-image: radial-gradient(ellipse at center 20%, black 10%, transparent 80%);
+            -webkit-mask-image: radial-gradient(ellipse at center 20%, black 10%, transparent 80%);
+            z-index: -3;
+            pointer-events: none;
+        }
+
+        .ambient-light {
+            position: fixed;
+            top: -20vh;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80vw;
+            height: 60vh;
+            background: radial-gradient(ellipse at center, theme('colors.accent.glow') 0%, transparent 70%);
+            filter: blur(100px);
+            z-index: -2;
+            pointer-events: none;
+        }
+
+        /* Liquid Glass Card (Apple + 21st.dev) */
+        .glass-panel {
+            background: theme('colors.surface');
+            backdrop-filter: blur(24px) saturate(180%);
+            -webkit-backdrop-filter: blur(24px) saturate(180%);
+            border: 1px solid theme('colors.border');
+            border-radius: 24px;
+            box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255,255,255,0.1);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .glass-panel:hover {
+            border-color: rgba(138,43,226,0.3);
+            box-shadow: 0 30px 60px -12px rgba(138,43,226,0.15), inset 0 1px 0 rgba(255,255,255,0.2);
+        }
+
+        /* Glowing Edge Effect */
+        .glow-edge::before {
+            content: '';
+            position: absolute;
+            inset: -1px;
+            border-radius: inherit;
+            padding: 1px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.3), rgba(255,255,255,0) 40%, rgba(138,43,226,0.5) 100%);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            pointer-events: none;
+        }
+
+        /* Gradient Text */
+        .text-gradient {
+            background: linear-gradient(135deg, #ffffff 0%, #a1a1aa 40%, #A855F7 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Reveal Animation */
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .reveal.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Stories Slider Custom Scrollbar */
+        .stories-scroll {
+            display: flex;
+            gap: 1.5rem;
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            scrollbar-width: none; /* Firefox */
+            padding-bottom: 2rem;
+            mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
+            -webkit-mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
+        }
+        .stories-scroll::-webkit-scrollbar { display: none; }
+        
+        .story-item {
+            scroll-snap-align: center;
+            flex: 0 0 clamp(240px, 60vw, 300px);
+            aspect-ratio: 9/16;
+            border-radius: 20px;
+            overflow: hidden;
+            position: relative;
+            background: theme('colors.background');
+            border: 1px solid theme('colors.border');
+            transition: transform 0.4s ease;
+            cursor: pointer;
+        }
+        .story-item:hover {
+            transform: translateY(-10px);
+            border-color: theme('colors.accent.DEFAULT');
+            box-shadow: 0 20px 40px rgba(138,43,226,0.2);
+        }
+        .story-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.6s ease;
+        }
+        .story-item:hover .story-img {
+            transform: scale(1.05);
+        }
+        .story-number {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            background: rgba(0,0,0,0.4);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: #fff;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            font-family: theme('fontFamily.mono');
+            font-size: 0.8rem;
+            z-index: 10;
+        }
+
+        /* Fullscreen Story Modal */
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.9);
+            backdrop-filter: blur(20px);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        .modal.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+        .modal img {
+            max-height: 90vh;
+            max-width: 90vw;
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.2);
+            box-shadow: 0 0 50px rgba(0,0,0,0.8);
+        }
+
+        /* Abstract Logo Container for Hero */
+        .hero-logo-wrapper {
+            width: 140px;
+            height: 140px;
+            position: relative;
+            margin: auto;
+            transform: rotate(-5deg);
+        }
+        
+        .hero-logo-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            filter: drop-shadow(0 20px 30px rgba(138,43,226,0.3));
+        }
+
+        /* Premium Image frame for Architect & Domain */
+        .premium-frame {
+            border-radius: 24px;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.1);
+            position: relative;
+            background: #050505;
+        }
+        .premium-frame img {
+            width: 100%;
+            height: auto;
+            display: block;
+            transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .premium-frame:hover img {
+            transform: scale(1.03);
+        }
+        .premium-frame::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.05);
+            pointer-events: none;
+            border-radius: inherit;
+        }
+
+    </style>
+</head>
+<body class="selection:bg-accent/40 selection:text-white antialiased">
+
+    <div class="ambient-grid"></div>
+    <div class="ambient-light"></div>
+
+    <!-- Navigation -->
+    <nav class="fixed top-0 inset-x-0 z-50 transition-all duration-300 bg-black/40 backdrop-blur-xl border-b border-white/5">
+        <div class="max-w-[1200px] mx-auto h-16 px-6 flex items-center justify-between">
+            <a href="#" class="flex items-center gap-3 group">
+                <img src="./logo/favicon.png" alt="NutuVocabulary" class="w-8 h-8 drop-shadow-[0_0_8px_rgba(138,43,226,0.4)] transition-transform group-hover:scale-110">
+                <span class="font-serif font-bold text-lg text-white">NutuVocabulary</span>
+            </a>
+            <div class="hidden md:flex items-center gap-8 text-sm font-medium text-zinc-400">
+                <a href="#about" class="hover:text-white transition-colors">Hakkında</a>
+                <a href="#features" class="hover:text-white transition-colors">Özellikler</a>
+                <a href="#infrastructure" class="hover:text-white transition-colors">Mimari</a>
+                <a href="#pricing" class="hover:text-white transition-colors">Paketler</a>
+                <a href="#stories" class="hover:text-white transition-colors">Hikaye</a>
+            </div>
+            <div>
+                <a href="#cta" class="h-9 px-5 inline-flex items-center justify-center rounded-full bg-white text-black text-sm font-semibold hover:bg-zinc-200 transition-colors">
+                    Keşfet <i data-lucide="arrow-up-right" class="w-4 h-4 ml-1"></i>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="relative pt-40 pb-20 px-6 min-h-[90vh] flex items-center justify-center text-center">
+        <div class="max-w-4xl mx-auto w-full">
+            <div class="hero-logo-wrapper mb-8 animate-float">
+                <img src="./logo/seffaf.png" alt="Logo Transparent">
+            </div>
+            <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-zinc-300 text-xs font-mono uppercase tracking-widest mb-8 backdrop-blur-md">
+                <span class="w-2 h-2 rounded-full bg-accent animate-pulse-glow"></span>
+                Ürün Geliştirme Projesi — Fikir Onay Dokümanı
+            </div>
+            <h1 class="font-serif text-5xl md:text-7xl font-bold tracking-tight leading-tight mb-8">
+                Günde Sadece <br/><span class="text-gradient">4 Kelime Yeterli</span>
+            </h1>
+            <p class="text-lg md:text-xl text-zinc-400 mb-12 max-w-2xl mx-auto leading-relaxed">
+                Büyük değişimler küçük adımlarla başlar. Minimalist, disiplinli ve sürdürülebilir kelime öğrenme ritüeliniz.
+            </p>
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+                <a href="#pricing" class="h-12 px-8 rounded-full bg-accent hover:bg-accent-light text-white font-medium flex items-center gap-2 transition-all shadow-[0_0_20px_rgba(138,43,226,0.4)] hover:shadow-[0_0_30px_rgba(138,43,226,0.6)]">
+                    <i data-lucide="zap" class="w-5 h-5"></i>
+                    Hemen Başla
+                </a>
+                <a href="#about" class="h-12 px-8 rounded-full bg-white/5 text-white font-medium flex items-center gap-2 border border-white/10 hover:bg-white/10 transition-all backdrop-blur-md">
+                    <i data-lucide="compass" class="w-5 h-5"></i>
+                    Daha Fazla
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- About & Domain Section -->
+    <section id="about" class="py-24 px-6 relative z-10">
+        <div class="max-w-[1200px] mx-auto">
+            <div class="grid lg:grid-cols-2 gap-16 items-center">
+                <div class="reveal">
+                    <div class="premium-frame glow-edge">
+                        <!-- Removed ./ domain visual path and matched to correct location -->
+                        <img src="./domain.png" alt="Domain Tescil" onerror="this.src='https://placehold.co/800x600/111/444?text=Domain+Visual';">
+                    </div>
+                </div>
+                <div class="reveal">
+                    <div class="text-accent text-sm font-mono tracking-widest uppercase mb-4 pl-1 border-l-2 border-accent">Ürün Tanımı & Tescil</div>
+                    <h2 class="font-serif text-4xl md:text-5xl font-bold mb-6">Kaostan Düzen. <br>Her Gün <span class="text-gradient">4 Kelime.</span></h2>
+                    <p class="text-zinc-400 text-lg leading-relaxed mb-6">
+                        NutuVocabulary, dil öğrenme sürecindeki en büyük engel olan "başlayıp bırakma" ve "bilgi yığını altında ezilme" sorununu çözen, minimalist bir kelime öğrenme asistanıdır.
+                    </p>
+                    <p class="text-zinc-400 text-lg leading-relaxed mb-8">
+                        Kullanıcı kelime eklediğinde yapay zeka otomatik olarak kelimeye ait örnek cümle kurar, ayrıca kartın arka yüzüne istenen dilde anlamını ve çevirisini ekler.
+                    </p>
+                    <div class="glass-panel p-6 border-l-4 border-l-accent">
+                        <div class="font-medium text-white mb-2 flex items-center gap-2"><i data-lucide="user" class="w-5 h-5 text-accent"></i> Persona: Berk, 26 — Yazılım Geliştirici</div>
+                        <p class="text-zinc-400 text-sm">Yoğun iş temposunda uzun süreli ders çalışmaya vakti olmayan ancak İngilizce dökümanları anlamak için kelime dağarcığını geliştirmek isteyen biri. "Vaktim yok" stresini, uygulamanın sunduğu günlük 4 kelimelik "odaklanmış rutin" ile aşar.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="py-24 px-6 relative z-10">
+        <div class="max-w-[1200px] mx-auto">
+            <div class="text-center mb-16 reveal">
+                <div class="text-accent text-sm font-mono tracking-widest uppercase mb-4">Öne Çıkan Özellikler</div>
+                <h2 class="font-serif text-4xl md:text-5xl font-bold">Her Detay, Bir Amaç İçin</h2>
+                <p class="text-zinc-400 mt-4 max-w-2xl mx-auto text-lg">Apple'ın tarzı ve 21st.dev'in fütüristik kod mimarisi ile kusursuzlaştı.</p>
+            </div>
+            
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Feature Card 1 -->
+                <div class="glass-panel p-8 reveal glow-edge group hidden-overflow">
+                    <div class="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mb-6 text-accent group-hover:scale-110 transition-transform">
+                        <i data-lucide="layers" class="w-6 h-6"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-3">Günün 4 Kelimesi</h3>
+                    <p class="text-zinc-400">Yapay zeka tarafından seçilen, seviyeye uygun günlük 4 temel kelime kartı. Az ama öz.</p>
+                </div>
+                <!-- 2 -->
+                <div class="glass-panel p-8 reveal glow-edge group">
+                    <div class="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mb-6 text-accent group-hover:scale-110 transition-transform">
+                        <i data-lucide="mic" class="w-6 h-6"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-3">Sınırsız Telaffuz</h3>
+                    <p class="text-zinc-400">Günlük tüm kelimeler ve arşivdeki tüm içerikler için sınırsız, yüksek kaliteli ses desteği.</p>
+                </div>
+                <!-- 3 -->
+                <div class="glass-panel p-8 reveal glow-edge group">
+                    <div class="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mb-6 text-accent group-hover:scale-110 transition-transform">
+                        <i data-lucide="brain-circuit" class="w-6 h-6"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-3">Akıllı Hatırlatıcı</h3>
+                    <p class="text-zinc-400">Unutulmaya başlanan kelimeleri otomatik tespit eden aralıklı tekrarlama (spaced repetition) sistemi.</p>
+                </div>
+                <!-- 4 -->
+                <div class="glass-panel p-8 reveal glow-edge group">
+                    <div class="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mb-6 text-accent group-hover:scale-110 transition-transform">
+                        <i data-lucide="archive" class="w-6 h-6"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-3">Sınırsız Arşiv</h3>
+                    <p class="text-zinc-400">Öğrenilen tüm kelimelere geriye dönük sınırsız erişim ve akıllı arama özelliği.</p>
+                </div>
+                <!-- 5 -->
+                <div class="glass-panel p-8 reveal glow-edge group">
+                    <div class="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mb-6 text-accent group-hover:scale-110 transition-transform">
+                        <i data-lucide="target" class="w-6 h-6"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-3">Özel İlgi Alanları</h3>
+                    <p class="text-zinc-400">İş, yazılım veya seyahat gibi kategorilerde kişiselleştirilmiş 4 kelime seçimi.</p>
+                </div>
+                <!-- 6 -->
+                <div class="glass-panel p-8 reveal glow-edge group">
+                    <div class="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mb-6 text-accent group-hover:scale-110 transition-transform">
+                        <i data-lucide="sparkles" class="w-6 h-6"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-3">Yapay Zeka Destekli</h3>
+                    <p class="text-zinc-400">Kartların arka yüzüne otomatik çeviri, anlam ve özel örnek cümle üreten AI motoru.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Tech Stack & Mimari Section -->
+    <section id="infrastructure" class="py-24 px-6 relative z-10 bg-[#000000]">
+        <div class="max-w-[1200px] mx-auto">
+            <div class="text-center mb-16 reveal">
+                <div class="text-accent text-sm font-mono tracking-widest uppercase mb-4">Teknolojik Mimari</div>
+                <h2 class="font-serif text-4xl md:text-5xl font-bold mb-4">Güçlü Altyapı</h2>
+                <p class="text-zinc-400 text-lg max-w-2xl mx-auto">Modern, ölçeklenebilir ve performanslı sistem bileşenleri.</p>
+            </div>
+            
+            <div class="grid lg:grid-cols-2 gap-12 items-center">
+                <!-- Data Blocks -->
+                <div class="space-y-6 reveal">
+                    <div class="glass-panel p-6 flex items-start gap-4">
+                        <div class="w-10 h-10 rounded-full bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 flex-shrink-0"><i data-lucide="database" class="w-5 h-5"></i></div>
+                        <div>
+                            <h4 class="text-white font-semibold mb-1">Backend & Veritabanı</h4>
+                            <p class="text-sm text-zinc-400">TypeScript (Node.js), Firebase Admin SDK, Cloud Firestore (NoSQL), REST API mimarisi.</p>
+                        </div>
+                    </div>
+                    <div class="glass-panel p-6 flex items-start gap-4">
+                        <div class="w-10 h-10 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 flex-shrink-0"><i data-lucide="globe" class="w-5 h-5"></i></div>
+                        <div>
+                            <h4 class="text-white font-semibold mb-1">Frontend Sinerjisi</h4>
+                            <p class="text-sm text-zinc-400">React, TypeScript, Tailwind CSS ve Zustand ile hafif state yönetimi.</p>
+                        </div>
+                    </div>
+                    <div class="glass-panel p-6 flex items-start gap-4">
+                        <div class="w-10 h-10 rounded-full bg-accent/10 border border-accent/20 flex items-center justify-center text-accent flex-shrink-0"><i data-lucide="smartphone" class="w-5 h-5"></i></div>
+                        <div>
+                            <h4 class="text-white font-semibold mb-1">Cross-Platform Mobil</h4>
+                            <p class="text-sm text-zinc-400">React Native (Expo) kullanılarak hem iOS hem Android için tek kod tabanı üzerinden entegrasyon.</p>
+                        </div>
+                    </div>
+                    <div class="glass-panel p-6 flex items-start gap-4">
+                        <div class="w-10 h-10 rounded-full bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-400 flex-shrink-0"><i data-lucide="server" class="w-5 h-5"></i></div>
+                        <div>
+                            <h4 class="text-white font-semibold mb-1">DevOps</h4>
+                            <p class="text-sm text-zinc-400">Git/GitHub üzerinden sürüm kontrolü, Docker ve Compose ile tam konteynerizasyon zorunluluğu.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Architecture Image -->
+                <div class="reveal">
+                    <div class="premium-frame glow-edge p-2 bg-white/5">
+                        <img src="./mimari.png" alt="Sistem Mimarisi" class="rounded-xl border border-white/5" onerror="this.src='https://placehold.co/800x600/111/555?text=Mimari+Diyagram';">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Brand Assets Section -->
+    <section id="brand" class="py-24 px-6 relative z-10">
+        <div class="max-w-[1200px] mx-auto">
+            <div class="text-center mb-16 reveal">
+                <div class="text-accent text-sm font-mono tracking-widest uppercase mb-4">ZaferanTR</div>
+                <h2 class="font-serif text-4xl md:text-5xl font-bold mb-4">Marka Kimliği</h2>
+                <p class="text-zinc-400 text-lg max-w-2xl mx-auto">Karmaşadan uzak, minimalist ve motive edici kimlik tasarımı.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 reveal">
+                <div class="glass-panel flex flex-col items-center justify-center p-8 bg-zinc-200 group">
+                    <span class="text-xs font-mono text-black/50 mb-4 tracking-widest uppercase">Açık Tema</span>
+                    <img src="./logo/acik.png" class="h-16 object-contain group-hover:scale-110 transition-transform">
+                </div>
+                <div class="glass-panel flex flex-col items-center justify-center p-8 glow-edge group">
+                    <span class="text-xs font-mono text-white/50 mb-4 tracking-widest uppercase">Koyu Tema</span>
+                    <img src="./logo/koyu.png" class="h-16 object-contain group-hover:scale-110 transition-transform">
+                </div>
+                <div class="glass-panel flex flex-col items-center justify-center p-8 glow-edge bg-gradient-to-br from-accent/10 to-transparent group">
+                    <span class="text-xs font-mono text-accent-light mb-4 tracking-widest uppercase">Şeffaf (Liquid)</span>
+                    <img src="./logo/seffaf.png" class="h-16 object-contain group-hover:scale-110 transition-transform">
+                </div>
+                <div class="glass-panel flex flex-col items-center justify-center p-8 glow-edge group">
+                    <span class="text-xs font-mono text-white/50 mb-4 tracking-widest uppercase">İkon (Favicon)</span>
+                    <img src="./logo/favicon.png" class="w-20 h-20 object-contain drop-shadow-[0_0_10px_rgba(255,255,255,0.2)] group-hover:scale-110 transition-transform">
+                </div>
+            </div>
+            
+            <div class="mt-12 glass-panel p-8 md:p-12 reveal text-center max-w-4xl mx-auto glow-edge">
+                <blockquote class="font-serif text-xl md:text-2xl italic text-zinc-300 leading-relaxed">
+                    "Merkezde Apple'ın yeni tasarım dilini yansıtan iç içe geçmiş şeffaf cam panel: her gün aşılacak sınırları imgelerken; camın şeffaflığı bilginin berraklığını, mor renk öğrenme tutkusunu simgeler."
+                </blockquote>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section id="pricing" class="py-24 px-6 relative z-10 bg-[#000000]">
+        <div class="max-w-[1000px] mx-auto">
+            <div class="text-center mb-16 reveal">
+                <div class="text-accent text-sm font-mono tracking-widest uppercase mb-4">Fiyatlandırma</div>
+                <h2 class="font-serif text-4xl md:text-5xl font-bold">Paketler</h2>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-8">
+                <!-- Free -->
+                <div class="glass-panel p-10 flex flex-col reveal text-center">
+                    <div class="text-xl font-bold text-white mb-2">Free</div>
+                    <div class="font-serif text-5xl text-white mb-6">₺0</div>
+                    <p class="text-zinc-400 text-sm mb-8">Sonsuza kadar ücretsiz erişim</p>
+                    
+                    <ul class="text-left space-y-4 mb-10 flex-grow text-zinc-300">
+                        <li class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-zinc-500 shrink-0"></i> Günün 4 kelime kartı</li>
+                        <li class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-zinc-500 shrink-0"></i> Kısıtlı telaffuz (Sadece 3 kelime)</li>
+                        <li class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-zinc-500 shrink-0"></i> Haftalık basit özet</li>
+                        <li class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-zinc-500 shrink-0"></i> Temel Liquid Glass tasarımı</li>
+                    </ul>
+                    <button class="w-full h-12 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-white font-medium transition-colors">
+                        Ücretsiz Başla
+                    </button>
+                </div>
+                
+                <!-- Premium -->
+                <div class="glass-panel p-10 flex flex-col reveal text-center glow-edge relative">
+                    <div class="absolute top-0 right-10 transform -translate-y-1/2">
+                        <span class="px-3 py-1 bg-gradient-to-r from-accent to-accent-light text-white text-xs font-bold uppercase tracking-wider rounded-full shadow-[0_4px_10px_rgba(138,43,226,0.3)]">Popüler</span>
+                    </div>
+                    
+                    <div class="text-xl font-bold text-accent-light mb-2">Premium</div>
+                    <div class="font-serif text-5xl text-white mb-2">₺99<span class="text-2xl text-zinc-400">,99</span><span class="text-lg text-zinc-500 font-sans"> /ay</span></div>
+                    <p class="text-zinc-500 text-sm mb-8">veya Yıllık ₺999,99 ile avantajlı</p>
+                    
+                    <ul class="text-left space-y-4 mb-10 flex-grow text-zinc-200">
+                        <li class="flex items-start gap-3"><i data-lucide="check-circle-2" class="w-5 h-5 text-accent shrink-0"></i> Tam kart deneyimi (İki yüzü çift dilli yapı)</li>
+                        <li class="flex items-start gap-3"><i data-lucide="check-circle-2" class="w-5 h-5 text-accent shrink-0"></i> Yapay zeka ile anında çeviri & cümle arşivi</li>
+                        <li class="flex items-start gap-3"><i data-lucide="check-circle-2" class="w-5 h-5 text-accent shrink-0"></i> Sınırsız arşiv ve sınırsız telaffuz</li>
+                        <li class="flex items-start gap-3"><i data-lucide="check-circle-2" class="w-5 h-5 text-accent shrink-0"></i> Akıllı aralıklı tekrarlama sistemi</li>
+                        <li class="flex items-start gap-3"><i data-lucide="check-circle-2" class="w-5 h-5 text-accent shrink-0"></i> Reklamsız ve çevrimdışı kullanım avantajı</li>
+                    </ul>
+                    <button class="w-full h-12 rounded-xl bg-accent hover:bg-accent-light text-white font-medium transition-all shadow-[0_0_15px_rgba(138,43,226,0.3)]">
+                        Premium'a Geç
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Instagram Stories Showcase -->
+    <section id="stories" class="py-24 relative z-10 overflow-hidden">
+        <div class="max-w-[1200px] mx-auto px-6">
+            <div class="text-center mb-16 reveal">
+                <div class="text-accent text-sm font-mono tracking-widest uppercase mb-4">Lansman</div>
+                <h2 class="font-serif text-4xl md:text-5xl font-bold mb-4">Instagram Story Görselleri</h2>
+                <p class="text-zinc-400 text-lg">Marka kimliğiyle uyumlu sosyal medya lansman kartları. Yana kaydırarak inceleyin.</p>
+            </div>
+        </div>
+
+        <!-- Horizontal Scroll Area -->
+        <div class="px-6 reveal" style="transition-delay: 200ms;">
+            <div class="stories-scroll">
+                <div class="story-item" onclick="openStoryModal('./stories/story1.png')">
+                    <span class="story-number">01</span>
+                    <img src="./stories/story1.png" class="story-img" onerror="this.src='https://placehold.co/1080x1920/111/555?text=Story01';">
+                </div>
+                <div class="story-item" onclick="openStoryModal('./stories/story2.png')">
+                    <span class="story-number">02</span>
+                    <img src="./stories/story2.png" class="story-img" onerror="this.src='https://placehold.co/1080x1920/111/555?text=Story02';">
+                </div>
+                <div class="story-item" onclick="openStoryModal('./stories/story3.png')">
+                    <span class="story-number">03</span>
+                    <img src="./stories/story3.png" class="story-img" onerror="this.src='https://placehold.co/1080x1920/111/555?text=Story03';">
+                </div>
+                <div class="story-item" onclick="openStoryModal('./stories/story4.png')">
+                    <span class="story-number">04</span>
+                    <img src="./stories/story4.png" class="story-img" onerror="this.src='https://placehold.co/1080x1920/111/555?text=Story04';">
+                </div>
+                <div class="story-item" onclick="openStoryModal('./stories/story5.png')">
+                    <span class="story-number">05</span>
+                    <img src="./stories/story5.png" class="story-img" onerror="this.src='https://placehold.co/1080x1920/111/555?text=Story05';">
+                </div>
+                <div class="story-item" onclick="openStoryModal('./stories/story6.png')">
+                    <span class="story-number">06</span>
+                    <img src="./stories/story6.png" class="story-img" onerror="this.src='https://placehold.co/1080x1920/111/555?text=Story06';">
+                </div>
+                <div class="story-item" onclick="openStoryModal('./stories/story7.png')">
+                    <span class="story-number">07</span>
+                    <img src="./stories/story7.png" class="story-img" onerror="this.src='https://placehold.co/1080x1920/111/555?text=Story07';">
+                </div>
+                <div class="story-item" onclick="openStoryModal('./stories/story8.png')">
+                    <span class="story-number">08</span>
+                    <img src="./stories/story8.png" class="story-img" onerror="this.src='https://placehold.co/1080x1920/111/555?text=Story08';">
+                </div>
+                <div class="story-item" onclick="openStoryModal('./stories/story9.png')">
+                    <span class="story-number">09</span>
+                    <img src="./stories/story9.png" class="story-img" onerror="this.src='https://placehold.co/1080x1920/111/555?text=Story09';">
+                </div>
+                <div class="story-item" onclick="openStoryModal('./stories/story10.png')">
+                    <span class="story-number">10</span>
+                    <img src="./stories/story10.png" class="story-img" onerror="this.src='https://placehold.co/1080x1920/111/555?text=Story10';">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section id="cta" class="py-24 px-6 relative z-10">
+        <div class="max-w-[800px] mx-auto content-center text-center">
+            <div class="glass-panel p-12 md:p-20 reveal glow-edge">
+                <i data-lucide="book-open" class="w-12 h-12 text-accent mx-auto mb-6"></i>
+                <h2 class="font-serif text-3xl md:text-5xl font-bold mb-6 text-white">
+                    Kendi Kütüphaneni <br/><span class="text-gradient">İnşa Etmeye Hazır Mısın?</span>
+                </h2>
+                <p class="text-zinc-400 text-lg mb-10 max-w-xl mx-auto">
+                    Kelimelerin gücünü keşfet. Odaklanmış, disiplinli ve kalıcı bir vizyon yarat.
+                </p>
+                <button class="h-14 px-10 rounded-full bg-white text-black font-bold text-lg hover:bg-zinc-200 transition-colors shadow-[0_0_20px_rgba(255,255,255,0.2)] hover:shadow-[0_0_30px_rgba(255,255,255,0.4)]">
+                    Uygulamayı Dene
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="border-t border-white/10 bg-black py-12 px-6 relative z-10">
+        <div class="max-w-[1200px] mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
+            <div class="flex items-center gap-2">
+                <img src="./logo/favicon.png" alt="Icon" class="w-5 h-5">
+                <span class="font-serif font-bold text-white tracking-tight">NutuVocabulary</span>
+            </div>
+            <p class="text-sm text-zinc-600">
+                © 2026 Nutu. Tüm hakları saklıdır.
+            </p>
+            <div class="flex gap-4">
+                <a href="#" class="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-zinc-400 hover:text-white hover:border-accent transition-colors"><i data-lucide="twitter" class="w-4 h-4"></i></a>
+                <a href="#" class="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-zinc-400 hover:text-white hover:border-accent transition-colors"><i data-lucide="github" class="w-4 h-4"></i></a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Story Modal -->
+    <div id="storyModal" class="modal" onclick="closeStoryModal()">
+        <img id="modalImg" src="" alt="Story Preview" onclick="event.stopPropagation()">
+        <button onclick="closeStoryModal()" class="absolute top-6 right-6 w-12 h-12 flex items-center justify-center rounded-full bg-white/10 border border-white/20 text-white backdrop-blur hover:bg-white/20 transition">
+            <i data-lucide="x"></i>
+        </button>
+    </div>
+
+    <script>
+        // Init Lucide
+        lucide.createIcons();
+
+        // Reveal Animations
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if(entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.1 });
+
+        document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+        // Background Nav Blur
+        const nav = document.querySelector('nav');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 20) {
+                nav.classList.add('shadow-lg', 'bg-black/60');
+            } else {
+                nav.classList.remove('shadow-lg', 'bg-black/60');
+            }
+        });
+
+        // Story Modal Logic
+        function openStoryModal(src) {
+            const modal = document.getElementById('storyModal');
+            document.getElementById('modalImg').src = src;
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeStoryModal() {
+            const modal = document.getElementById('storyModal');
+            modal.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeStoryModal();
+        });
+    </script>
+</body>
+</html>

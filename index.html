@@ -1,0 +1,1260 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NutuVocabulary — Günde Sadece 4 Kelime</title>
+  <link rel="icon" type="image/png" href="logo/favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inria+Serif:ital,wght@0,300;0,400;0,700;1,300;1,400;1,700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --violet: #8A2BE2;
+      --violet-light: #A855F7;
+      --violet-dark: #6B21A8;
+      --lavender: #E6E6FA;
+      --lavender-light: #F0EDFF;
+      --bg: #FAFAFF;
+      --bg-secondary: #F3F1FF;
+      --text-primary: #1A1A2E;
+      --text-secondary: #4A4A6A;
+      --text-muted: #8888A8;
+      --glass-bg: rgba(255, 255, 255, 0.55);
+      --glass-border: rgba(138, 43, 226, 0.12);
+      --glass-shadow: 0 8px 32px rgba(138, 43, 226, 0.08);
+      --card-radius: 24px;
+      --section-gap: 140px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text-primary);
+      line-height: 1.6;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .serif { font-family: 'Inria Serif', Georgia, serif; }
+
+    /* ─── Ambient background orbs ─── */
+    .ambient-orb {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(120px);
+      opacity: 0.35;
+      pointer-events: none;
+      z-index: -1;
+    }
+    .orb-1 { width: 600px; height: 600px; background: var(--violet); top: -200px; right: -150px; }
+    .orb-2 { width: 500px; height: 500px; background: var(--lavender); bottom: 20%; left: -200px; }
+    .orb-3 { width: 400px; height: 400px; background: #C084FC; top: 50%; right: -100px; opacity: 0.2; }
+
+    /* ─── Navbar ─── */
+    .navbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 1000;
+      padding: 0 40px;
+      height: 72px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(250, 250, 255, 0.72);
+      backdrop-filter: blur(24px) saturate(180%);
+      -webkit-backdrop-filter: blur(24px) saturate(180%);
+      border-bottom: 1px solid rgba(138, 43, 226, 0.06);
+      transition: all 0.3s ease;
+    }
+    .navbar.scrolled {
+      background: rgba(250, 250, 255, 0.92);
+      box-shadow: 0 1px 24px rgba(138, 43, 226, 0.06);
+    }
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: var(--text-primary);
+    }
+    .nav-logo img { height: 36px; width: auto; border-radius: 8px; }
+    .nav-logo span { font-family: 'Inria Serif', serif; font-size: 20px; font-weight: 700; }
+    .nav-links { display: flex; gap: 32px; align-items: center; }
+    .nav-links a {
+      text-decoration: none;
+      color: var(--text-secondary);
+      font-size: 14px;
+      font-weight: 500;
+      transition: color 0.2s;
+      letter-spacing: -0.01em;
+    }
+    .nav-links a:hover { color: var(--violet); }
+    .nav-cta {
+      background: var(--violet) !important;
+      color: #fff !important;
+      padding: 10px 24px;
+      border-radius: 12px;
+      font-weight: 600 !important;
+      transition: all 0.2s !important;
+      box-shadow: 0 2px 12px rgba(138, 43, 226, 0.3);
+    }
+    .nav-cta:hover { transform: translateY(-1px); box-shadow: 0 4px 20px rgba(138, 43, 226, 0.4); }
+
+    .nav-hamburger {
+      display: none;
+      flex-direction: column;
+      gap: 5px;
+      cursor: pointer;
+      background: none;
+      border: none;
+      padding: 4px;
+    }
+    .nav-hamburger span {
+      display: block;
+      width: 22px;
+      height: 2px;
+      background: var(--text-primary);
+      border-radius: 2px;
+      transition: all 0.3s;
+    }
+
+    /* ─── Container ─── */
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+    .container-wide { max-width: 1400px; margin: 0 auto; padding: 0 24px; }
+
+    /* ─── Hero ─── */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 120px 24px 80px;
+      position: relative;
+    }
+    .hero-content { max-width: 800px; }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 20px;
+      background: var(--glass-bg);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--glass-border);
+      border-radius: 100px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--violet);
+      margin-bottom: 32px;
+      animation: fadeInUp 0.6s ease both;
+    }
+    .hero-badge .dot {
+      width: 6px;
+      height: 6px;
+      background: var(--violet);
+      border-radius: 50%;
+      animation: pulse 2s ease infinite;
+    }
+    .hero-logo {
+      width: 180px;
+      margin: 0 auto 40px;
+      animation: fadeInUp 0.6s ease 0.1s both;
+    }
+    .hero-logo img { width: 100%; height: auto; filter: drop-shadow(0 20px 40px rgba(138, 43, 226, 0.15)); }
+    .hero h1 {
+      font-family: 'Inria Serif', serif;
+      font-size: clamp(42px, 6vw, 72px);
+      font-weight: 700;
+      line-height: 1.08;
+      letter-spacing: -0.03em;
+      color: var(--text-primary);
+      margin-bottom: 24px;
+      animation: fadeInUp 0.6s ease 0.2s both;
+    }
+    .hero h1 .gradient-text {
+      background: linear-gradient(135deg, var(--violet), var(--violet-light), #C084FC);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero p {
+      font-size: 18px;
+      color: var(--text-secondary);
+      max-width: 560px;
+      margin: 0 auto 48px;
+      line-height: 1.7;
+      animation: fadeInUp 0.6s ease 0.3s both;
+    }
+    .hero-actions {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      flex-wrap: wrap;
+      animation: fadeInUp 0.6s ease 0.4s both;
+    }
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 16px 32px;
+      background: var(--violet);
+      color: #fff;
+      border: none;
+      border-radius: 16px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.25s ease;
+      box-shadow: 0 4px 24px rgba(138, 43, 226, 0.35);
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px rgba(138, 43, 226, 0.45);
+      background: var(--violet-dark);
+    }
+    .btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 16px 32px;
+      background: var(--glass-bg);
+      backdrop-filter: blur(12px);
+      color: var(--text-primary);
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.25s ease;
+    }
+    .btn-secondary:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--glass-shadow);
+      border-color: rgba(138, 43, 226, 0.25);
+    }
+
+    /* ─── Section headers ─── */
+    .section-header {
+      text-align: center;
+      max-width: 680px;
+      margin: 0 auto 64px;
+    }
+    .section-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--violet);
+      margin-bottom: 16px;
+    }
+    .section-label::before {
+      content: '';
+      display: inline-block;
+      width: 20px;
+      height: 2px;
+      background: var(--violet);
+      border-radius: 1px;
+    }
+    .section-header h2 {
+      font-family: 'Inria Serif', serif;
+      font-size: clamp(32px, 4vw, 48px);
+      font-weight: 700;
+      line-height: 1.15;
+      letter-spacing: -0.02em;
+      margin-bottom: 16px;
+    }
+    .section-header p {
+      font-size: 17px;
+      color: var(--text-secondary);
+      line-height: 1.7;
+    }
+
+    /* ─── Glass card ─── */
+    .glass-card {
+      background: var(--glass-bg);
+      backdrop-filter: blur(20px) saturate(150%);
+      -webkit-backdrop-filter: blur(20px) saturate(150%);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--card-radius);
+      box-shadow: var(--glass-shadow);
+      transition: all 0.35s ease;
+    }
+    .glass-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 16px 48px rgba(138, 43, 226, 0.12);
+      border-color: rgba(138, 43, 226, 0.2);
+    }
+
+    /* ─── About section ─── */
+    .about { padding: var(--section-gap) 0; }
+    .about-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 48px;
+      align-items: center;
+    }
+    .about-visual {
+      position: relative;
+      display: flex;
+      justify-content: center;
+    }
+    .about-visual img {
+      width: 85%;
+      border-radius: 24px;
+      box-shadow: 0 24px 64px rgba(138, 43, 226, 0.12);
+    }
+    .about-content h2 {
+      font-family: 'Inria Serif', serif;
+      font-size: clamp(28px, 3.5vw, 42px);
+      font-weight: 700;
+      line-height: 1.2;
+      letter-spacing: -0.02em;
+      margin-bottom: 20px;
+    }
+    .about-content p {
+      color: var(--text-secondary);
+      font-size: 16px;
+      line-height: 1.8;
+      margin-bottom: 16px;
+    }
+    .about-content .persona-card {
+      margin-top: 32px;
+      padding: 24px;
+      background: linear-gradient(135deg, rgba(138, 43, 226, 0.04), rgba(168, 85, 247, 0.06));
+      border: 1px solid rgba(138, 43, 226, 0.1);
+      border-radius: 16px;
+    }
+    .persona-card .persona-name {
+      font-weight: 700;
+      color: var(--violet);
+      font-size: 15px;
+      margin-bottom: 8px;
+    }
+    .persona-card p { font-size: 14px; margin-bottom: 0; }
+
+    /* ─── Features ─── */
+    .features { padding: var(--section-gap) 0; }
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+    .feature-card {
+      padding: 36px 28px;
+      position: relative;
+      overflow: hidden;
+    }
+    .feature-icon {
+      width: 52px;
+      height: 52px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, var(--violet), var(--violet-light));
+      border-radius: 14px;
+      margin-bottom: 20px;
+      font-size: 24px;
+      box-shadow: 0 4px 16px rgba(138, 43, 226, 0.25);
+    }
+    .feature-card h3 {
+      font-family: 'Inria Serif', serif;
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+    .feature-card p {
+      color: var(--text-secondary);
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    /* ─── Pricing ─── */
+    .pricing { padding: var(--section-gap) 0; }
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 32px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    .price-card { padding: 44px 36px; position: relative; overflow: hidden; }
+    .price-card.featured {
+      background: linear-gradient(160deg, rgba(138, 43, 226, 0.08), rgba(168, 85, 247, 0.04), var(--glass-bg));
+      border-color: rgba(138, 43, 226, 0.2);
+    }
+    .price-card.featured::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--violet), var(--violet-light), #C084FC);
+    }
+    .price-tag {
+      display: inline-block;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 6px 14px;
+      border-radius: 8px;
+      margin-bottom: 24px;
+    }
+    .price-card:not(.featured) .price-tag {
+      background: rgba(138, 43, 226, 0.06);
+      color: var(--violet);
+    }
+    .price-card.featured .price-tag {
+      background: linear-gradient(135deg, var(--violet), var(--violet-light));
+      color: #fff;
+    }
+    .price-amount {
+      font-family: 'Inria Serif', serif;
+      font-size: 42px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .price-period { color: var(--text-muted); font-size: 14px; margin-bottom: 32px; }
+    .price-features { list-style: none; margin-bottom: 36px; }
+    .price-features li {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 10px 0;
+      font-size: 14px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+    .price-features li::before {
+      content: '✓';
+      flex-shrink: 0;
+      width: 22px;
+      height: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(138, 43, 226, 0.08);
+      color: var(--violet);
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .price-card.featured .price-features li::before {
+      background: rgba(138, 43, 226, 0.12);
+    }
+    .price-btn {
+      display: block;
+      width: 100%;
+      padding: 16px;
+      text-align: center;
+      border-radius: 14px;
+      font-size: 15px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.25s;
+      cursor: pointer;
+      border: none;
+    }
+    .price-card:not(.featured) .price-btn {
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      color: var(--text-primary);
+    }
+    .price-card:not(.featured) .price-btn:hover {
+      border-color: rgba(138, 43, 226, 0.3);
+      box-shadow: 0 4px 16px rgba(138, 43, 226, 0.1);
+    }
+    .price-card.featured .price-btn {
+      background: var(--violet);
+      color: #fff;
+      box-shadow: 0 4px 20px rgba(138, 43, 226, 0.35);
+    }
+    .price-card.featured .price-btn:hover {
+      box-shadow: 0 8px 28px rgba(138, 43, 226, 0.45);
+      transform: translateY(-1px);
+    }
+
+    /* ─── Tech stack ─── */
+    .tech { padding: var(--section-gap) 0; }
+    .tech-categories { display: flex; flex-direction: column; gap: 40px; }
+    .tech-category-title {
+      font-family: 'Inria Serif', serif;
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .tech-category-title .cat-icon {
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, var(--violet), var(--violet-light));
+      border-radius: 10px;
+      font-size: 16px;
+      box-shadow: 0 2px 10px rgba(138, 43, 226, 0.2);
+    }
+    .tech-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 16px;
+    }
+    .tech-item {
+      padding: 24px 20px;
+    }
+    .tech-item-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+    .tech-item-value {
+      font-family: 'Inria Serif', serif;
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    /* ─── Brand section ─── */
+    .brand { padding: var(--section-gap) 0; }
+    .brand-visual-row {
+      display: flex;
+      gap: 24px;
+      margin-bottom: 48px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .brand-logo-variant {
+      width: 200px;
+      padding: 20px;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .brand-logo-variant img { width: 100%; height: auto; }
+    .brand-logo-variant.light-bg { background: #f8f7ff; border: 1px solid var(--glass-border); }
+    .brand-logo-variant.dark-bg { background: #1a1a2e; border: 1px solid rgba(255,255,255,0.1); }
+    .brand-info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 24px;
+    }
+    .brand-info-card { padding: 28px 24px; }
+    .brand-info-card h4 {
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--violet);
+      margin-bottom: 12px;
+    }
+    .brand-info-card p { font-size: 14px; color: var(--text-secondary); line-height: 1.7; }
+    .color-swatches { display: flex; gap: 12px; margin-top: 12px; }
+    .color-swatch {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      border: 2px solid rgba(0,0,0,0.06);
+      position: relative;
+    }
+    .color-swatch .tooltip {
+      position: absolute;
+      bottom: -28px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 10px;
+      white-space: nowrap;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    /* ─── Stories gallery (slider) ─── */
+    .stories { padding: var(--section-gap) 0; overflow: hidden; }
+    .stories-slider {
+      position: relative;
+      padding: 0 56px;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    .stories-slider-btn {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 10;
+      width: 48px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--glass-bg);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--glass-border);
+      border-radius: 50%;
+      color: var(--violet);
+      font-size: 22px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      box-shadow: var(--glass-shadow);
+      -webkit-tap-highlight-color: transparent;
+    }
+    .stories-slider-btn:hover:not(:disabled) {
+      background: var(--violet);
+      color: #fff;
+      border-color: var(--violet);
+      transform: translateY(-50%) scale(1.08);
+      box-shadow: 0 8px 24px rgba(138, 43, 226, 0.35);
+    }
+    .stories-slider-btn:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+    .stories-slider-btn.prev { left: 12px; }
+    .stories-slider-btn.next { right: 12px; }
+    .stories-track {
+      display: flex;
+      gap: 20px;
+      overflow-x: auto;
+      padding: 20px 0 40px;
+      scroll-snap-type: x mandatory;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+      cursor: grab;
+      scroll-behavior: smooth;
+    }
+    .stories-track::-webkit-scrollbar { display: none; }
+    .story-card {
+      flex-shrink: 0;
+      width: 240px;
+      border-radius: 24px;
+      overflow: hidden;
+      scroll-snap-align: start;
+      position: relative;
+      box-shadow: 0 8px 32px rgba(138, 43, 226, 0.1);
+      transition: all 0.35s ease;
+    }
+    .story-card:hover { transform: translateY(-8px) scale(1.02); box-shadow: 0 16px 48px rgba(138, 43, 226, 0.18); }
+    .story-card img { width: 100%; height: auto; display: block; }
+    .story-card .story-number {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255,255,255,0.85);
+      backdrop-filter: blur(8px);
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--violet);
+    }
+
+    /* ─── CTA section ─── */
+    .cta {
+      padding: 100px 0 120px;
+      text-align: center;
+    }
+    .cta-card {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 72px 48px;
+      background: linear-gradient(160deg, rgba(138, 43, 226, 0.06), rgba(168, 85, 247, 0.03), var(--glass-bg));
+      border: 1px solid rgba(138, 43, 226, 0.12);
+      border-radius: 32px;
+      position: relative;
+      overflow: hidden;
+    }
+    .cta-card::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -50%;
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle, rgba(138, 43, 226, 0.06) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .cta-card h2 {
+      font-family: 'Inria Serif', serif;
+      font-size: clamp(28px, 3.5vw, 40px);
+      font-weight: 700;
+      line-height: 1.2;
+      margin-bottom: 16px;
+    }
+    .cta-card p {
+      color: var(--text-secondary);
+      font-size: 17px;
+      max-width: 500px;
+      margin: 0 auto 36px;
+      line-height: 1.7;
+    }
+
+    /* ─── Footer ─── */
+    .footer {
+      padding: 48px 0;
+      border-top: 1px solid rgba(138, 43, 226, 0.06);
+    }
+    .footer-inner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .footer-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .footer-logo img { height: 28px; border-radius: 6px; }
+    .footer-logo span { font-family: 'Inria Serif', serif; font-weight: 700; font-size: 16px; }
+    .footer-text { color: var(--text-muted); font-size: 13px; }
+    .footer-links { display: flex; gap: 24px; }
+    .footer-links a { color: var(--text-muted); font-size: 13px; text-decoration: none; transition: color 0.2s; }
+    .footer-links a:hover { color: var(--violet); }
+
+    /* ─── Scroll animations ─── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ─── Keyframes ─── */
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    /* ─── Mobile-first story lightbox modal ─── */
+    .story-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 2000;
+      background: rgba(0,0,0,0.85);
+      backdrop-filter: blur(12px);
+      align-items: center;
+      justify-content: center;
+      animation: fadeIn 0.3s ease;
+    }
+    .story-modal.active { display: flex; }
+    .story-modal img {
+      max-height: 85vh;
+      max-width: 90vw;
+      border-radius: 20px;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.4);
+    }
+    .story-modal-close {
+      position: absolute;
+      top: 24px;
+      right: 28px;
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255,255,255,0.15);
+      backdrop-filter: blur(8px);
+      border: none;
+      border-radius: 12px;
+      color: #fff;
+      font-size: 20px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .story-modal-close:hover { background: rgba(255,255,255,0.25); }
+    .story-modal-nav {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 48px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255,255,255,0.15);
+      backdrop-filter: blur(8px);
+      border: none;
+      border-radius: 14px;
+      color: #fff;
+      font-size: 22px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .story-modal-nav:hover { background: rgba(255,255,255,0.25); }
+    .story-modal-prev { left: 20px; }
+    .story-modal-next { right: 20px; }
+
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    /* ─── Responsive ─── */
+    @media (max-width: 1024px) {
+      .features-grid { grid-template-columns: repeat(2, 1fr); }
+      .about-grid { grid-template-columns: 1fr; }
+      .about-visual { order: -1; }
+    }
+    @media (max-width: 768px) {
+      :root { --section-gap: 80px; }
+      .navbar { padding: 0 20px; }
+      .nav-links { display: none; }
+      .nav-hamburger { display: flex; }
+      .nav-links.open {
+        display: flex;
+        position: fixed;
+        top: 72px;
+        left: 0;
+        right: 0;
+        flex-direction: column;
+        background: rgba(250, 250, 255, 0.96);
+        backdrop-filter: blur(24px);
+        padding: 24px;
+        gap: 16px;
+        border-bottom: 1px solid var(--glass-border);
+        animation: fadeIn 0.2s ease;
+      }
+      .features-grid { grid-template-columns: 1fr; }
+      .pricing-grid { grid-template-columns: 1fr; }
+      .hero-actions { flex-direction: column; align-items: center; }
+      .hero { padding: 100px 20px 60px; }
+      .footer-inner { flex-direction: column; gap: 16px; text-align: center; }
+      .story-card { width: 200px; }
+      .stories-slider { padding: 0 44px; }
+      .stories-slider-btn { width: 42px; height: 42px; font-size: 18px; }
+      .stories-slider-btn.prev { left: 6px; }
+      .stories-slider-btn.next { right: 6px; }
+      .cta-card { padding: 48px 24px; }
+      .brand-visual-row { gap: 16px; }
+      .brand-logo-variant { width: 150px; padding: 16px; }
+    }
+    @media (max-width: 480px) {
+      .hero h1 { font-size: 32px; }
+      .price-amount { font-size: 32px; }
+      .story-card { width: 170px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Ambient orbs -->
+  <div class="ambient-orb orb-1"></div>
+  <div class="ambient-orb orb-2"></div>
+  <div class="ambient-orb orb-3"></div>
+
+  <!-- Navbar -->
+  <nav class="navbar" id="navbar">
+    <a href="#" class="nav-logo">
+      <img src="logo/favicon.png" alt="NutuVocabulary">
+      <span class="serif">NutuVocabulary</span>
+    </a>
+    <div class="nav-links" id="navLinks">
+      <a href="#about">Hakkında</a>
+      <a href="#features">Özellikler</a>
+      <a href="#pricing">Fiyatlar</a>
+      <a href="#tech">Teknoloji</a>
+      <a href="#stories">Hikaye</a>
+      <a href="#brand">Marka</a>
+      <a href="#cta" class="nav-cta">Keşfet ↗</a>
+    </div>
+    <button class="nav-hamburger" id="navToggle" aria-label="Menü">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+
+  <!-- Hero -->
+  <section class="hero" id="hero">
+    <div class="hero-content">
+      <div class="hero-badge"><span class="dot"></span> Ürün Geliştirme Projesi — Fikir Onay Dokümanı</div>
+      <div class="hero-logo"><img src="logo/seffaf.png" alt="NutuVocabulary Logo"></div>
+      <h1>Günde Sadece <span class="gradient-text">4 Kelime Yeterli</span></h1>
+      <p>Büyük değişimler küçük adımlarla başlar. Minimalist, disiplinli ve sürdürülebilir kelime öğrenme ritüeliniz.</p>
+      <div class="hero-actions">
+        <a href="#pricing" class="btn-primary">
+          <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+          Hemen Başla
+        </a>
+        <a href="#about" class="btn-secondary">
+          <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          Daha Fazla
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- About -->
+  <section class="about container" id="about">
+    <div class="about-grid">
+      <div class="about-visual reveal">
+        <img src="logo/logo.png" alt="NutuVocabulary">
+      </div>
+      <div class="about-content reveal">
+        <div class="section-label">Ürün Tanımı</div>
+        <h2>Kaostan Düzen. <br>Her Gün <span class="gradient-text">4 Kelime.</span></h2>
+        <p>NutuVocabulary, dil öğrenme sürecindeki en büyük engel olan "başlayıp bırakma" ve "bilgi yığını altında ezilme" sorununu çözen, minimalist bir kelime öğrenme asistanıdır.</p>
+        <p>Uygulama, kullanıcının kendi seçtiği veya merak ettiği kelimeleri dijital bir kart sistemine dönüştürür. Her gün sadece 4 kelimeye odaklanmanızı sağlayarak, öğrenmeyi bir yük olmaktan çıkarıp sürdürülebilir bir alışkanlık haline getirir. Kullanıcı kelime eklediğinde yapay zeka otomatik olarak kelimeye ait örnek cümle kurar, ayrıca kartın arka yüzüne istenen dilde anlamını ve çevirisini ekler.</p>
+        <div class="persona-card">
+          <div class="persona-name">🧑‍💻 Berk, 26 — Yazılım Geliştirici</div>
+          <p>Yoğun iş temposunda uzun süreli ders çalışmaya vakti olmayan ancak İngilizce dökümanları anlamak için kelime dağarcığını geliştirmek isteyen biri. "Vaktim yok" stresini, uygulamanın sunduğu günlük 4 kelimelik "odaklanmış rutin" ile aşar.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section class="features container" id="features">
+    <div class="section-header reveal">
+      <div class="section-label">Özellikler</div>
+      <h2>Her Detay, Bir Amaç İçin</h2>
+      <p>Apple'ın Liquid Glass tasarım dili ve Inria Serif tipografisiyle, dijital bir kütüphane estetiği sunar.</p>
+    </div>
+    <div class="features-grid">
+      <div class="glass-card feature-card reveal">
+        <div class="feature-icon">📇</div>
+        <h3>Günün 4 Kelimesi</h3>
+        <p>Yapay zeka tarafından seçilen, seviyeye uygun günlük 4 temel kelime kartı. Az ama öz — her gün tutarlı ilerleme.</p>
+      </div>
+      <div class="glass-card feature-card reveal">
+        <div class="feature-icon">🔊</div>
+        <h3>Sınırsız Telaffuz</h3>
+        <p>Günlük tüm kelimeler ve arşivdeki tüm içerikler için sınırsız, yüksek kaliteli ses desteği.</p>
+      </div>
+      <div class="glass-card feature-card reveal">
+        <div class="feature-icon">🧠</div>
+        <h3>Akıllı Hatırlatıcı</h3>
+        <p>Unutulmaya başlanan kelimeleri otomatik tespit eden aralıklı tekrarlama (spaced repetition) sistemi.</p>
+      </div>
+      <div class="glass-card feature-card reveal">
+        <div class="feature-icon">📚</div>
+        <h3>Sınırsız Arşiv</h3>
+        <p>Öğrenilen tüm kelimelere geriye dönük sınırsız erişim ve akıllı arama özelliği.</p>
+      </div>
+      <div class="glass-card feature-card reveal">
+        <div class="feature-icon">🎯</div>
+        <h3>Özel İlgi Alanları</h3>
+        <p>İş, yazılım veya seyahat gibi kategorilerde kişiselleştirilmiş 4 kelime seçimi.</p>
+      </div>
+      <div class="glass-card feature-card reveal">
+        <div class="feature-icon">✨</div>
+        <h3>Liquid Glass Tasarım</h3>
+        <p>Apple'ın yeni nesil sıvı cam efektleriyle oluşturulmuş minimalist ve şık arayüz deneyimi.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pricing -->
+  <section class="pricing container" id="pricing">
+    <div class="section-header reveal">
+      <div class="section-label">Fiyatlandırma</div>
+      <h2>Sana Uygun Planı Seç</h2>
+      <p>Ücretsiz sürümle başla, Premium ile sınırları kaldır.</p>
+    </div>
+    <div class="pricing-grid">
+      <div class="glass-card price-card reveal">
+        <span class="price-tag">Free</span>
+        <div class="price-amount serif">₺0</div>
+        <div class="price-period">Sonsuza kadar ücretsiz</div>
+        <ul class="price-features">
+          <li>Günün 4 kelime kartı</li>
+          <li>Kısıtlı telaffuz (Sadece 3 kelime)</li>
+          <li>Haftalık basit özet</li>
+          <li>Temel Liquid Glass tasarımı</li>
+          <li>Günlük en fazla 4 kelime kartı görüntüleme hakkı</li>
+        </ul>
+        <button class="price-btn">Ücretsiz Başla</button>
+      </div>
+      <div class="glass-card price-card featured reveal">
+        <span class="price-tag">Premium</span>
+        <div class="price-amount serif">₺99<span style="font-size:20px;font-weight:400">,99</span></div>
+        <div class="price-period">/ ay &nbsp;·&nbsp; Yıllık ₺999,99</div>
+        <ul class="price-features">
+          <li>Tam kart deneyimi (İki yüzü çift dilli ve açıklamalı yapı)</li>
+          <li>Yapay zeka desteğiyle akıllı arama, cümle oluşturma ve anında çeviri</li>
+          <li>Sınırsız arşiv ve kelime günlüğü</li>
+          <li>Sınırsız yüksek kaliteli telaffuz</li>
+          <li>Akıllı aralıklı tekrarlama sistemi</li>
+          <li>Günlük 4 kelimeden daha fazla kart görüntüleme hakkı</li>
+          <li>Reklamsız ve çevrimdışı kullanım avantajı</li>
+        </ul>
+        <button class="price-btn">Premium'a Geç ↗</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Tech Stack -->
+  <section class="tech container" id="tech">
+    <div class="section-header reveal">
+      <div class="section-label">Teknoloji</div>
+      <h2>Güçlü Altyapı</h2>
+      <p>Modern, ölçeklenebilir ve performanslı bir teknolojik temel.</p>
+    </div>
+    <div class="tech-categories">
+      <div class="reveal">
+        <div class="tech-category-title"><span class="cat-icon">⚙️</span> Backend</div>
+        <div class="tech-grid">
+          <div class="glass-card tech-item"><div class="tech-item-label">Dil</div><div class="tech-item-value">TypeScript (Node.js)</div></div>
+          <div class="glass-card tech-item"><div class="tech-item-label">Framework</div><div class="tech-item-value">Firebase Admin SDK</div></div>
+          <div class="glass-card tech-item"><div class="tech-item-label">Veritabanı</div><div class="tech-item-value">Cloud Firestore</div></div>
+          <div class="glass-card tech-item"><div class="tech-item-label">API</div><div class="tech-item-value">REST</div></div>
+          <div class="glass-card tech-item"><div class="tech-item-label">Auth</div><div class="tech-item-value">Firebase Auth (JWT)</div></div>
+        </div>
+      </div>
+      <div class="reveal">
+        <div class="tech-category-title"><span class="cat-icon">🖥️</span> Frontend — Web</div>
+        <div class="tech-grid">
+          <div class="glass-card tech-item"><div class="tech-item-label">Dil</div><div class="tech-item-value">TypeScript</div></div>
+          <div class="glass-card tech-item"><div class="tech-item-label">Framework</div><div class="tech-item-value">React</div></div>
+          <div class="glass-card tech-item"><div class="tech-item-label">CSS</div><div class="tech-item-value">Tailwind CSS</div></div>
+          <div class="glass-card tech-item"><div class="tech-item-label">State</div><div class="tech-item-value">Zustand</div></div>
+        </div>
+      </div>
+      <div class="reveal">
+        <div class="tech-category-title"><span class="cat-icon">📱</span> Mobil</div>
+        <div class="tech-grid">
+          <div class="glass-card tech-item"><div class="tech-item-label">Yaklaşım</div><div class="tech-item-value">Cross-platform (App Store & Play Store)</div></div>
+          <div class="glass-card tech-item"><div class="tech-item-label">Teknoloji</div><div class="tech-item-value">React Native (Expo)</div></div>
+          <div class="glass-card tech-item"><div class="tech-item-label">Tablet</div><div class="tech-item-value">Responsive & Özelleştirilmiş Görünüm</div></div>
+        </div>
+      </div>
+      <div class="reveal">
+        <div class="tech-category-title"><span class="cat-icon">🐳</span> DevOps</div>
+        <div class="tech-grid">
+          <div class="glass-card tech-item"><div class="tech-item-label">Versiyon</div><div class="tech-item-value">Git</div></div>
+          <div class="glass-card tech-item"><div class="tech-item-label">Repo</div><div class="tech-item-value">GitHub</div></div>
+          <div class="glass-card tech-item"><div class="tech-item-label">Container</div><div class="tech-item-value">Docker + Compose</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Brand -->
+  <section class="brand container" id="brand">
+    <div class="section-header reveal">
+      <div class="section-label">Marka Kimliği</div>
+      <h2>Tasarım Dili</h2>
+      <p>Her piksel, bir hikaye anlatır. Minimalizm ve işlevsellik bir arada.</p>
+    </div>
+    <div class="brand-visual-row reveal">
+      <div class="brand-logo-variant light-bg"><img src="logo/acik.png" alt="Açık Tema Logo"></div>
+      <div class="brand-logo-variant dark-bg"><img src="logo/koyu.png" alt="Koyu Tema Logo"></div>
+      <div class="brand-logo-variant light-bg" style="background:transparent;"><img src="logo/seffaf.png" alt="Şeffaf Logo"></div>
+    </div>
+    <div class="brand-info-grid">
+      <div class="glass-card brand-info-card reveal">
+        <h4>Marka Kimliği (ZaferanTR)</h4>
+        <p>"Büyük değişimler küçük adımlarla başlar" felsefesini savunur. Karmaşadan uzak, minimalist, disiplinli ve motive edici bir dost karakterindedir.</p>
+      </div>
+      <div class="glass-card brand-info-card reveal">
+        <h4>Renk Paleti</h4>
+        <p>Ana renk Vivid Violet, yardımcı Glassy White, zemin Ultra Light Lavender.</p>
+        <div class="color-swatches">
+          <div class="color-swatch" style="background:#8A2BE2"><span class="tooltip">#8A2BE2</span></div>
+          <div class="color-swatch" style="background:#FFFFFF; border-color: #ddd;"><span class="tooltip">#FFFFFF</span></div>
+          <div class="color-swatch" style="background:#E6E6FA"><span class="tooltip">#E6E6FA</span></div>
+        </div>
+      </div>
+      <div class="glass-card brand-info-card reveal">
+        <h4>Tipografi</h4>
+        <p style="font-family:'Inria Serif',serif; font-size: 18px;">Inria Serif</p>
+        <p>Bu fontun hümanist yapısı, uygulamanın bir "sözlük" değil, bir "öğrenme günlüğü" olduğu hissini pekiştirir.</p>
+      </div>
+      <div class="glass-card brand-info-card reveal">
+        <h4>Logo Hikayesi</h4>
+        <p>Merkezde Apple'ın yeni tasarım dilini yansıtan iç içe geçmiş 4 şeffaf cam panel: her gün aşılacak "4 kelime" eşiği. Camın şeffaflığı bilginin berraklığını, mor renk öğrenme tutkusunu simgeler.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Stories -->
+  <section class="stories" id="stories">
+    <div class="container">
+      <div class="section-header reveal">
+        <div class="section-label">Tanıtım</div>
+        <h2>Instagram Story Görselleri</h2>
+        <p>Marka kimliğiyle uyumlu 10 adet tanıtım görseli. Oklarla veya kaydırarak keşfedin.</p>
+      </div>
+    </div>
+    <div class="stories-slider">
+      <button type="button" class="stories-slider-btn prev" id="storiesPrev" aria-label="Önceki">‹</button>
+      <button type="button" class="stories-slider-btn next" id="storiesNext" aria-label="Sonraki">›</button>
+      <div class="stories-track" id="storiesTrack">
+      <div class="story-card" onclick="openStory(0)"><span class="story-number">1</span><img src="stories/story1.png" alt="Story 1 — Teaser" loading="lazy"></div>
+      <div class="story-card" onclick="openStory(1)"><span class="story-number">2</span><img src="stories/story2.png" alt="Story 2 — Problem" loading="lazy"></div>
+      <div class="story-card" onclick="openStory(2)"><span class="story-number">3</span><img src="stories/story3.png" alt="Story 3 — Çözüm" loading="lazy"></div>
+      <div class="story-card" onclick="openStory(3)"><span class="story-number">4</span><img src="stories/story4.png" alt="Story 4 — Özellik 1" loading="lazy"></div>
+      <div class="story-card" onclick="openStory(4)"><span class="story-number">5</span><img src="stories/story5.png" alt="Story 5 — Özellik 2" loading="lazy"></div>
+      <div class="story-card" onclick="openStory(5)"><span class="story-number">6</span><img src="stories/story6.png" alt="Story 6 — Özellik 3" loading="lazy"></div>
+      <div class="story-card" onclick="openStory(6)"><span class="story-number">7</span><img src="stories/story7.png" alt="Story 7 — Free vs Premium" loading="lazy"></div>
+      <div class="story-card" onclick="openStory(7)"><span class="story-number">8</span><img src="stories/story8.png" alt="Story 8 — Sosyal Kanıt" loading="lazy"></div>
+      <div class="story-card" onclick="openStory(8)"><span class="story-number">9</span><img src="stories/story9.png" alt="Story 9 — CTA" loading="lazy"></div>
+      <div class="story-card" onclick="openStory(9)"><span class="story-number">10</span><img src="stories/story10.png" alt="Story 10 — Lansman" loading="lazy"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta container" id="cta">
+    <div class="cta-card reveal">
+      <h2 class="serif">Kendi Kütüphaneni <span class="gradient-text">İnşa Etmeye</span> Hazır Mısın?</h2>
+      <p>Her gün sadece 4 kelime ile başlayan yolculuk, seni düşündüğünden çok daha ileriye taşır.</p>
+      <a href="#pricing" class="btn-primary">
+        <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+        Hemen Keşfet
+      </a>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-inner">
+        <div class="footer-logo">
+          <img src="logo/favicon.png" alt="NutuVocabulary">
+          <span class="serif">NutuVocabulary</span>
+        </div>
+        <div class="footer-text">© 2026 NutuVocabulary. Tüm hakları saklıdır.</div>
+        <div class="footer-links">
+          <a href="#about">Hakkında</a>
+          <a href="#features">Özellikler</a>
+          <a href="#pricing">Fiyatlar</a>
+          <a href="#tech">Teknoloji</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Story Modal -->
+  <div class="story-modal" id="storyModal">
+    <button class="story-modal-close" onclick="closeStory()">✕</button>
+    <button class="story-modal-nav story-modal-prev" onclick="prevStory()">‹</button>
+    <button class="story-modal-nav story-modal-next" onclick="nextStory()">›</button>
+    <img id="storyModalImg" src="" alt="Story">
+  </div>
+
+  <script>
+    // Navbar scroll
+    const navbar = document.getElementById('navbar');
+    window.addEventListener('scroll', () => {
+      navbar.classList.toggle('scrolled', window.scrollY > 20);
+    });
+
+    // Mobile nav toggle
+    document.getElementById('navToggle').addEventListener('click', () => {
+      document.getElementById('navLinks').classList.toggle('open');
+    });
+    document.querySelectorAll('#navLinks a').forEach(a => {
+      a.addEventListener('click', () => document.getElementById('navLinks').classList.remove('open'));
+    });
+
+    // Scroll reveal
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+        }
+      });
+    }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+    // Story modal
+    const storyPaths = Array.from({ length: 10 }, (_, i) => `stories/story${i + 1}.png`);
+    let currentStory = 0;
+
+    function openStory(idx) {
+      currentStory = idx;
+      document.getElementById('storyModalImg').src = storyPaths[idx];
+      document.getElementById('storyModal').classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeStory() {
+      document.getElementById('storyModal').classList.remove('active');
+      document.body.style.overflow = '';
+    }
+    function nextStory() {
+      currentStory = (currentStory + 1) % storyPaths.length;
+      document.getElementById('storyModalImg').src = storyPaths[currentStory];
+    }
+    function prevStory() {
+      currentStory = (currentStory - 1 + storyPaths.length) % storyPaths.length;
+      document.getElementById('storyModalImg').src = storyPaths[currentStory];
+    }
+    document.getElementById('storyModal').addEventListener('click', (e) => {
+      if (e.target === e.currentTarget) closeStory();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (!document.getElementById('storyModal').classList.contains('active')) return;
+      if (e.key === 'Escape') closeStory();
+      if (e.key === 'ArrowRight') nextStory();
+      if (e.key === 'ArrowLeft') prevStory();
+    });
+
+    // Stories slider: prev/next buttons
+    const storiesTrack = document.getElementById('storiesTrack');
+    const storiesPrevBtn = document.getElementById('storiesPrev');
+    const storiesNextBtn = document.getElementById('storiesNext');
+    const CARD_WIDTH = 260; // 240px card + 20px gap
+
+    function updateStoriesArrows() {
+      const scrollLeft = storiesTrack.scrollLeft;
+      const maxScroll = storiesTrack.scrollWidth - storiesTrack.clientWidth;
+      storiesPrevBtn.disabled = scrollLeft <= 2;
+      storiesNextBtn.disabled = maxScroll <= 2 || scrollLeft >= maxScroll - 2;
+    }
+
+    storiesPrevBtn.addEventListener('click', () => {
+      storiesTrack.scrollBy({ left: -CARD_WIDTH * 2, behavior: 'smooth' });
+    });
+    storiesNextBtn.addEventListener('click', () => {
+      storiesTrack.scrollBy({ left: CARD_WIDTH * 2, behavior: 'smooth' });
+    });
+    storiesTrack.addEventListener('scroll', updateStoriesArrows);
+    window.addEventListener('resize', updateStoriesArrows);
+    updateStoriesArrows();
+
+    // Drag to scroll stories
+    let isDragging = false, startX, scrollLeft;
+    storiesTrack.addEventListener('mousedown', (e) => {
+      isDragging = true;
+      storiesTrack.style.cursor = 'grabbing';
+      startX = e.pageX - storiesTrack.offsetLeft;
+      scrollLeft = storiesTrack.scrollLeft;
+    });
+    storiesTrack.addEventListener('mouseleave', () => { isDragging = false; storiesTrack.style.cursor = 'grab'; });
+    storiesTrack.addEventListener('mouseup', () => { isDragging = false; storiesTrack.style.cursor = 'grab'; });
+    storiesTrack.addEventListener('mousemove', (e) => {
+      if (!isDragging) return;
+      e.preventDefault();
+      const x = e.pageX - storiesTrack.offsetLeft;
+      storiesTrack.scrollLeft = scrollLeft - (x - startX) * 1.5;
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="tr" class="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NutuVocabulary — Vision</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        background: '#000000',
+                        foreground: '#f5f5f7',
+                        border: 'rgba(255, 255, 255, 0.12)',
+                        accent: {
+                            DEFAULT: '#8A2BE2',
+                            hover: '#a855f7',
+                            glow: 'rgba(138, 43, 226, 0.3)'
+                        },
+                        muted: {
+                            DEFAULT: '#86868b',
+                            foreground: '#a1a1aa'
+                        },
+                        glass: {
+                            bg: 'rgba(255, 255, 255, 0.02)',
+                            border: 'rgba(255, 255, 255, 0.08)'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['"Inter"', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+                        mono: ['"JetBrains Mono"', 'monospace'],
+                        serif: ['"Inria Serif"', 'serif'],
+                    },
+                    backgroundImage: {
+                        'hero-glow': 'radial-gradient(circle at 50% 0%, rgba(138,43,226,0.15) 0%, transparent 60%)',
+                    },
+                    animation: {
+                        'reveal-up': 'revealUp 1s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+                    },
+                    keyframes: {
+                        revealUp: {
+                            '0%': { opacity: '0', transform: 'translateY(40px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Google Fonts -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inria+Serif:wght@300;400;700&family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
+        rel="stylesheet">
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Marked.js for Markdown Parsing -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <style>
+        :root {
+            color-scheme: dark;
+        }
+
+        body {
+            background-color: theme('colors.background');
+            color: theme('colors.foreground');
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+        }
+
+        /* Apple-esque Ambient Details */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.4);
+        }
+
+        .ambient-mesh {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-image:
+                radial-gradient(ellipse at 50% 0%, theme('colors.accent.glow'), transparent 50%);
+            z-index: -2;
+            pointer-events: none;
+            opacity: 0.8;
+            filter: blur(60px);
+        }
+
+        /* 21st.dev UI Border Glow */
+        .glowing-wrapper {
+            position: relative;
+            background: theme('colors.background');
+            border-radius: 24px;
+        }
+
+        .glowing-wrapper::before {
+            content: '';
+            position: absolute;
+            inset: -1px;
+            border-radius: inherit;
+            padding: 1px;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0) 40%, rgba(138, 43, 226, 0.3) 100%);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            pointer-events: none;
+            transition: all 0.5s ease;
+        }
+
+        .glowing-wrapper:hover::before {
+            background: linear-gradient(180deg, rgba(138, 43, 226, 0.4), rgba(255, 255, 255, 0.05) 50%, rgba(255, 255, 255, 0.2) 100%);
+        }
+
+        /* Apple-style Glass Panel */
+        .apple-glass {
+            background: rgba(30, 30, 32, 0.4);
+            backdrop-filter: blur(40px);
+            -webkit-backdrop-filter: blur(40px);
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+
+        /* Markdown Rendering Styles */
+        .md-prose {
+            font-family: 'Inter', sans-serif;
+            color: #a1a1a6;
+            /* Apple muted gray */
+            line-height: 1.6;
+            font-size: 1.125rem;
+            letter-spacing: -0.01em;
+        }
+
+        /* H1 - Apple Style Huge Typo */
+        .md-prose h1 {
+            font-family: 'Inria Serif', serif;
+            font-size: clamp(3rem, 6vw, 5rem);
+            line-height: 1.05;
+            color: #f5f5f7;
+            margin-bottom: 2rem;
+            letter-spacing: -0.04em;
+            font-weight: 700;
+            text-align: center;
+        }
+
+        /* Highlight gradient for text */
+        .text-gradient {
+            background: linear-gradient(110deg, #fff 0%, #a855f7 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* H2 */
+        .md-prose h2 {
+            font-size: 2rem;
+            color: #f5f5f7;
+            font-weight: 600;
+            margin-top: 5rem;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            letter-spacing: -0.02em;
+        }
+
+        /* Abstract elegant icon box for h2 */
+        .icon-box {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 4px 12px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            flex-shrink: 0;
+            transition: transform 0.3s ease;
+        }
+
+        .md-prose h2:hover .icon-box {
+            transform: scale(1.05) translateY(-2px);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 8px 16px rgba(138, 43, 226, 0.2);
+            border-color: rgba(138, 43, 226, 0.4);
+        }
+
+        .md-prose h2 .lucide {
+            color: #fff;
+            stroke-width: 2px;
+            width: 24px;
+            height: 24px;
+        }
+
+        .md-prose h3 {
+            font-size: 1.4rem;
+            color: #f5f5f7;
+            font-weight: 500;
+            margin-top: 3rem;
+            margin-bottom: 1.25rem;
+            letter-spacing: -0.01em;
+        }
+
+        .md-prose p {
+            margin-bottom: 1.75rem;
+            max-width: 800px;
+        }
+
+        .md-prose strong {
+            color: #ffffff;
+            font-weight: 600;
+        }
+
+        /* Lists */
+        .md-prose ul {
+            list-style: none;
+            padding: 0;
+            margin-bottom: 2rem;
+            max-width: 800px;
+        }
+
+        .md-prose ul li {
+            position: relative;
+            padding-left: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .md-prose ul li::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 10px;
+            width: 18px;
+            height: 2px;
+            background: theme('colors.accent.DEFAULT');
+            border-radius: 2px;
+            transition: width 0.3s ease;
+        }
+
+        .md-prose ul li:hover::before {
+            width: 24px;
+            background: #fff;
+        }
+
+        /* 21st.dev Ultra Premium Tables */
+        .md-prose table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin: 3rem 0;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 16px;
+            border: 1px solid theme('colors.glass.border');
+            overflow: hidden;
+            backdrop-filter: blur(20px);
+        }
+
+        .md-prose th,
+        .md-prose td {
+            padding: 1.5rem 1.5rem;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            vertical-align: top;
+        }
+
+        .md-prose th {
+            background: rgba(255, 255, 255, 0.03);
+            color: #ffffff;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            font-weight: 600;
+        }
+
+        .md-prose tr:last-child td {
+            border-bottom: none;
+        }
+
+        .md-prose tr {
+            transition: background 0.2s ease;
+        }
+
+        .md-prose tr:hover td {
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        /* Inline Code */
+        .md-prose code {
+            font-family: 'JetBrains Mono', monospace;
+            background: rgba(255, 255, 255, 0.1);
+            color: #e5e5ea;
+            padding: 0.2em 0.5em;
+            border-radius: 6px;
+            font-size: 0.85em;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        /* Blockquotes - Apple Style */
+        .md-prose blockquote {
+            margin: 3rem 0;
+            padding: 2rem;
+            border-radius: 24px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.01) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: #f5f5f7;
+            font-weight: 400;
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .md-prose blockquote p {
+            margin: 0;
+            font-size: 1.25rem;
+            line-height: 1.5;
+            letter-spacing: -0.01em;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+
+            .md-prose th,
+            .md-prose td {
+                padding: 1rem;
+            }
+
+            .md-prose h1 {
+                font-size: 2.5rem;
+            }
+
+            .md-prose h2 {
+                font-size: 1.5rem;
+            }
+        }
+
+        /* Logo Stack Anim */
+        .glass-icon-container {
+            width: 40px;
+            height: 40px;
+            position: relative;
+            transform: rotate(-5deg);
+            transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .glass-icon-container:hover {
+            transform: rotate(0deg) scale(1.05);
+        }
+
+        .glass-logo-panel {
+            position: absolute;
+            width: 16px;
+            height: 24px;
+            border-radius: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(12px);
+            transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+        }
+
+        .glass-icon-container .p1 {
+            transform: translate(0px, 0px) rotate(15deg);
+            border-color: rgba(138, 43, 226, 0.3);
+            z-index: 1;
+        }
+
+        .glass-icon-container .p2 {
+            transform: translate(6px, -3px) rotate(25deg);
+            border-color: rgba(138, 43, 226, 0.5);
+            z-index: 2;
+        }
+
+        .glass-icon-container .p3 {
+            transform: translate(12px, -1px) rotate(35deg);
+            border-color: rgba(138, 43, 226, 0.8);
+            z-index: 3;
+        }
+
+        .glass-icon-container .p4 {
+            transform: translate(18px, 3px) rotate(45deg);
+            border-color: rgba(138, 43, 226, 1);
+            background: rgba(138, 43, 226, 0.2);
+            z-index: 4;
+        }
+
+        .glass-icon-container:hover .p1 {
+            transform: translate(0px, 0px) rotate(0deg);
+        }
+
+        .glass-icon-container:hover .p2 {
+            transform: translate(8px, 0px) rotate(0deg);
+        }
+
+        .glass-icon-container:hover .p3 {
+            transform: translate(16px, 0px) rotate(0deg);
+        }
+
+        .glass-icon-container:hover .p4 {
+            transform: translate(24px, 0px) rotate(0deg);
+        }
+    </style>
+</head>
+
+<body class="antialiased selection:bg-accent/40 selection:text-white">
+
+    <div class="ambient-mesh"></div>
+
+    <!-- Navigation Core -->
+    <nav class="fixed top-0 inset-x-0 z-50 transition-all duration-300 apple-glass border-b border-border/50">
+        <div class="max-w-[1200px] mx-auto h-[64px] px-6 flex items-center justify-between">
+            <div class="flex items-center gap-4 cursor-pointer group">
+                <div class="glass-icon-container">
+                    <div class="glass-logo-panel p1"></div>
+                    <div class="glass-logo-panel p2"></div>
+                    <div class="glass-logo-panel p3"></div>
+                    <div class="glass-logo-panel p4"></div>
+                </div>
+                <div class="flex flex-col">
+                    <span
+                        class="font-serif font-bold text-lg text-[#f5f5f7] leading-none group-hover:text-accent transition-colors duration-300">NutuVocabulary</span>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-4">
+                <!-- Apple styled pill button -->
+                <button
+                    class="h-8 px-4 inline-flex items-center justify-center gap-2 rounded-full bg-white text-black font-medium text-xs tracking-wide transition-all hover:scale-105 active:scale-95 shadow-[0_0_15px_rgba(255,255,255,0.15)]">
+                    Explore product
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="relative z-10 pt-[160px] pb-32 px-6">
+        <div class="max-w-[1000px] mx-auto">
+
+            <div class="flex justify-center mb-10 opacity-0 animate-reveal-up" style="animation-delay: 0.1s;">
+                <div
+                    class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-muted font-medium text-xs tracking-wide shadow-lg backdrop-blur-md">
+                    <i data-lucide="sparkles" class="w-3.5 h-3.5 text-accent"></i>
+                    Vision Document 2026
+                </div>
+            </div>
+
+            <!-- Glowing wrapper container for the document -->
+            <div class="glowing-wrapper opacity-0 animate-reveal-up" style="animation-delay: 0.2s;">
+                <div class="apple-glass rounded-3xl p-8 sm:p-16 lg:p-20 relative overflow-hidden">
+
+                    <script type="text/markdown" id="md-source">
+# 📋 ÜRÜN GELİŞTİRME PROJESİ — FİKİR ONAY DOKÜMANI
+
+Öğrenci Adı Soyadı: [Adınızı yazın]
+Öğrenci Numarası: [Numaranızı yazın]
+Tarih: [GG/AA/YYYY]
+
+## 1. 🏷️ Ürün İsmi
+
+| Alan | Açıklama |
+|------|----------|
+| Ürün İsmi | [NutuVocabulary] |
+| İsmin Anlamı / Hikayesi | [
+Nutuk’u okuduğumda çok heyecanlanmıştım Atatürk her zor zamanda bir şey yapmaya çalışmış.Ondan esinlendim.] |
+| Slogan | [Günde sadece 4 kelime yeterli] |
+
+## 2. 🎨 Ürün Markası
+
+| Alan | Açıklama |
+|------|----------|
+| Marka Adı | [ZaferanTR] |
+| Marka Kimliği | ["Büyük değişimler küçük adımlarla başlar" felsefesini savunur. Karmaşadan uzak, minimalist, disiplinli ve motive edici bir dost karakterindedir.] |
+| Hedef Kitle Algısı | ["Günde sadece 4 kelimeyle, kendim için dev bir adım atıyorum." Kullanıcıda başarı hissi, sürdürülebilirlik ve "vaktim yok" bahanesini yok eden bir hafiflik algısı yaratır.] |
+| Marka Renk Paleti | [Ana renk: Vivid Violet (Canlı Mor - #8A2BE2), Yardımcı: Glassy White (Saydam Beyaz), Zemin: Ultra Light Grey/Lavender (Çok açık lila/gri)] |
+| Tipografi | [Inria Serif. Bu fontun hümanist yapısı, uygulamanın bir "sözlük" değil, bir "öğrenme günlüğü" olduğu hissini pekiştirir.] |
+
+## 3. 🌐 Domain (Alan Adı) Kontrolü
+
+| Alan | Açıklama |
+|------|----------|
+| Birincil Domain | [örnek: nutuvocabulary.com] |
+| Domain Müsait mi? | [Evet — Kontrol tarihi: 10/03/2026] |
+| Kontrol Yapılan Site | [https://dnschecker.org] |
+📸 Ekran Görüntüsü: domain olarak ekledim.
+
+## 4. 💰 Paketleme Modeli (Free & Premium)
+
+### 4.1 Free (Ücretsiz) Paket
+
+| Özellik | Açıklama |
+|---------|----------|
+| Günün 4 Kelimesi | [Yapay zeka tarafından seçilen, seviyeye uygun günlük 4 temel kelime kartı.] |
+| Kısıtlı Telaffuz | [Günlük sunulan 4 kelimeden sadece 3tanesi için sesli telaffuz desteği.] |
+| Haftalık Özet | [Hafta boyunca öğrenilen kelimelerin basit bir liste halinde görüntülenmesi.] |
+| Liquid Glass / Sıvı Cam Tasarımı  | [Temel sıvı cam efektli (liquid) minimalist tasarım deneyimi.] |
+| Kısıtlamalar | [Günlük en fazla 4 kelime kartı görüntüleme hakkı.] |
+
+### 4.2 Premium (Ücretli) Paket
+
+| Özellik | Açıklama |
+|---------|----------|
+| Aylık Fiyat | [99,99tl/2.99 $] |
+| Yıllık Fiyat | [999,99tl / 24.99 $] |
+| Tam Kart Deneyimi | [Kartın arka yüzünde; kelimenin İngilizce açıklaması, seviyesi (A1-C2), kelime tipi, ve Türkçe karşılığı eksiksiz yer alır. ve kelimenin yazdığı yüzeyde de 1 adet örnek cümle ingilzce olarak yazar ve bu şekilde bir taraf kartın hep ingilizce 2.tarafı da ingilizce ve türkçe olur.] |
+| Yapay Zeka | [ Öğrenilen tüm kelimeler yapay zeka desteğiyle saklanır; kullanıcı istediği kelimeyi akıllı arama ile bulabilir, örnek cümle oluşturabilir ve anında Türkçeye çevirisini görebilir. ] |
+
+| Sınırsız Arşiv | [Öğrenilen tüm kelimelere geriye dönük sınırsız erişim ve akıllı arama özelliği.] |
+| Sınırsız Telaffuz | [Günlük tüm kelimeler ve arşivdeki tüm içerikler için sınırsız, yüksek kaliteli ses desteği.] |
+| Akıllı Hatırlatıcı | [Unutulmaya başlanan kelimeleri otomatik tespit eden aralıklı tekrarlama sistemi.] |
+| Özel İlgi Alanları | [İş, yazılım veya seyahat gibi kategorilerde kişiselleştirilmiş 4 kelime seçimi.] |
+
+| Ek Avantajlar | [Tamamen reklamsız deneyim, çevrimdışı kullanım ve IGünlük  4 kelimeden daha fazla kelime  kartı görüntüleme hakkı] |
+
+### 4.3 Premium Paket Gerekçesi — Neden Bir Kullanıcı Bunun İçin Para Öder?
+
+⚠️ Bu bölüm kritik öneme sahiptir. Aşağıdaki iki paragrafı doldururken kendinize şu soruları sorunuz ve dürüstçe cevaplayınız:
+
+#### Gerçek bir kullanıcı bu Premium paket için cebinden 1 dolar, 5 dolar veya belirlediğiniz fiyatı öder mi?
+
+##### (Başlıksız)
+
+#### Premium pakette sunduğunuz özellikler, kullanıcının günlük hayatında gerçek bir ihtiyaca karşılık geliyor mu?
+
+##### (Başlıksız)
+
+#### Bu özelliklerin aynısı veya benzeri başka bir platformda ücretsiz olarak sunuluyor mu? Sunuluyorsa sizinki neden farklı ve neden ücrete değer?
+
+##### (Başlıksız)
+
+#### Kullanıcı bu parayı vermezse ne kaybeder? Free paket yeterli olabilir mi?
+
+Paragraf 1 — Gerçek İhtiyaç Analizi:
+[Mevcut kelime uygulamaları (Duolingo, Quizlet vb.) kullanıcıyı binlerce kelime ve karmaşık arayüzlerle yormaktadır. NutuVocabulary, Apple’ın modern "Liquid Glass" tasarım dili ve Inria Serif tipografisiyle kullanıcıya "dijital bir kütüphane estetiği" sunar. Piyasadaki rakiplerin aksine, öğrenmeyi bir görevden ziyade, her gün sadece 4 kelimeye odaklanan prestijli bir ritüele dönüştürür.]
+Paragraf 2 — Piyasa Karşılaştırması ve Fiyat Gerekçesi:
+[Ücretsiz sürümde telaffuzun kısıtlanması (4 kelimeden 3'ünün duyulması) ve kartların arka yüzündeki derin bilgilerin (İngilizce açıklama, seviye tespiti ve örnek cümle) gizlenmesi, kullanıcıda tam öğrenme isteğini tetikler. Kullanıcı, sadece bir kelime ezberlemek için değil; o kelimenin dil bilimsel derinliğine (seviye ve tip bilgisi) şeffaf ve akıcı bir arayüzle zahmetsizce ulaşmak, sınırsız bir kişisel kelime arşivi oluşturmak için Premium paketi tercih edecektir.]
+
+## 5. 📊 Ürün Tanımı ve Problem Çözümü
+
+### 5.1 Ürün Ne İş Yapar?
+
+[NutuVocabulary, dil öğrenme sürecindeki en büyük engel olan "başlayıp bırakma" ve "bilgi yığını altında ezilme" sorununu çözen, minimalist bir kelime öğrenme asistanıdır. Günümüzde pek çok uygulama kullanıcıyı yüzlerce kelimeyle yorarken, NutuVocabulary "az ama öz" ilkesini benimser.
+Uygulama, kullanıcının kendi seçtiği veya merak ettiği kelimeleri dijital bir kart sistemine dönüştürür. Her gün sadece 4 kelimeye odaklanmanızı sağlayarak, öğrenmeyi bir yük olmaktan çıkarıp sürdürülebilir bir alışkanlık haline getirir.Kullanıcı eğer kendi kelime eklemek isterse ingilizce kelimeyi yazıyor ve otomatik yapay zeka tarafından kartın ingilizce yazan kısmına bir o kelimeye ait örnek yazılıyor ve kartın arka sayfasına da kelimenin ingilizce açıklaması ve türkçe açıklaması ((kullanıcının istediği dilde )) VE ÖN sayfadaki ingilizce örnek cümlenin türkçesi(kullanıcının istediği dili) yazacak.]
+
+### 5.2 Kullanıcı Persona
+
+[Berk (26, Yazılım Geliştirici): Yoğun iş temposunda uzun süreli ders çalışmaya vakti olmayan ancak İngilizce dökümanları anlamak için kelime dağarcığını geliştirmek isteyen biri. "Vaktim yok" stresini, uygulamanın sunduğu günlük 4 kelimelik "odaklanmış rutin" ile aşar.]
+
+## 6.Madde Kaldırıldı -
+
+## 7. 🛠️ Teknolojik Altyapı
+
+⚠️ Bu bölümde her alan için yalnızca tek bir teknoloji belirtilmelidir. "X veya Y" şeklinde belirsiz ifadeler kabul edilmez. Seçiminizi kesin olarak yapınız.
+
+### 7.1 Backend (Sunucu Tarafı)
+
+| Alan | Seçim | Gerekçe |
+|------|-------|---------|
+| Programlama Dili | [TypeScript (Node.js)] | [Firebase Cloud Functions ile tam uyumlu çalışması, tip güvenliği sayesinde kelime kartı verilerini hatasız yönetmesi ve React Native (Frontend) ile aynı dil ekosistemini paylaşması nedeniyle seçilmiştir.] |
+| Framework | [Firebase Admin SDK] | [Sunucusuz (serverless) mimari sayesinde altyapı yönetimini minimize etmek, kullanıcı kelime girişlerini anlık olarak işlemek ve Firebase servislerini (Auth, Firestore) en yüksek performansla kontrol etmek için tercih edilmiştir.] |
+| Veritabanı | [Cloud Firestore] | [Kelime kartlarının esnek yapısına uygun doküman tabanlı (NoSQL) bir depolama sunması, anlık senkronizasyon yeteneği ve çevrimdışı çalışma desteğiyle "akıcı cam" kullanıcı deneyimini desteklediği için seçilmiştir.] |
+| API Mimarisi | [REST] | [Firebase Functions üzerinden sunulan uç noktalar aracılığıyla mobil uygulama ve backend arasında standart, hafif ve Dockerize edilmiş yapılarla uyumlu bir iletişim kurmak için tercih edilmiştir.] |
+| Kimlik Doğrulama | [Firebase Auth (JWT tabanlı) ] | [Google, Apple ve E-posta ile giriş gibi yöntemleri hazır ve güvenli bir şekilde sunması, kullanıcı oturumlarını JWT standartlarında yöneterek Premium erişim kontrollerini basitleştirmesi için seçilmiştir.] |
+
+### 7.2 Frontend (Ön Yüz) — Web
+
+| Alan | Seçim | Gerekçe |
+|------|-------|---------|
+| Programlama Dili | [TypeScript ] | [Uygulamanın karmaşık kelime objelerini (anlam, seviye, örnek cümle vb.) hata payı olmadan yönetmek ve 21st.dev bileşenleriyle tam uyumlu, tip güvenli bir yapı kurmak için seçilmiştir.] |
+| Framework / Kütüphane | [React] | [21st.dev kütüphanesinin sunduğu modern arayüz bileşenlerini en performanslı şekilde kullanmak ve esnek "flip card" (kart çevirme) animasyonlarını kolayca yönetmek için tercih edilmiştir.] |
+| CSS Framework | [Tailwind CSS] | [Apple'ın yeni nesil "Liquid Glass" efektlerini (backdrop-blur, opacity, gradients) hızlıca kodlamak ve 21st.dev bileşenlerinin tasarımını marka kimliğine (mor ve beyaz) göre kolayca özelleştirmek için seçilmiştir.] |
+| State Management | [Zustand] | [Kullanıcının o gün çalıştığı 4 kelimeyi ve uygulama içindeki kart çevirme durumlarını, Redux gibi karmaşık yapılar yerine daha hafif, hızlı ve modern bir state yönetimiyle kontrol etmek için seçilmiştir.] |
+
+### 7.3 Mobil Uygulama
+
+| Alan | Seçim | Gerekçe |
+|------|-------|---------|
+| Geliştirme Yaklaşımı | [Cross-platform] | [Tek bir kod tabanı üzerinden hem iOS hem de Android cihazlarda yüksek performanslı ve tutarlı bir kullanıcı deneyimi sunarak geliştirme maliyetini ve süresini optimize etmek için seçilmiştir.] |
+| Teknoloji | [React Native] | [Halihazırda kullanılacak olan React ekosistemiyle tam uyumlu olması, 21st.dev bileşenlerinin estetiğini mobil dünyaya taşıyabilmesi ve "Liquid Glass" gibi yoğun grafik içeren arayüzleri yerel (native) performansa yakın bir akıcılıkla sunabilmesi için tercih edilmiştir.] |
+| Desteklenen Platformlar | [iHer ikisi] | ["Günde 4 kelime" felsefesinin her an erişilebilir olması gerektiğinden, kullanıcı kitlesini kısıtlamamak ve her iki işletim sistemindeki kullanıcılara da şeffaf cam efektli modern arayüz deneyimini ulaştırmak için her iki platform da desteklenecektir.] |
+
+### 7.4 DevOps & Altyapı
+
+| Alan | Durum | Açıklama |
+|------|-------|----------|
+| Versiyon Kontrolü | 🔒 Zorunlu | Git |
+| Kod Deposu | 🔒 Zorunlu | GitHub |
+| Konteynerizasyon | 🔒 Zorunlu | Docker + Docker Compose |
+Git, GitHub ve Docker bu derste zorunlu altyapı bileşenleridir. Değiştirilemez ve tartışmaya açık değildir.
+
+### 7.5 Mimari Diyagram
+
+[Basit bir sistem mimarisi çizimi ekleyin veya el çizimi fotoğrafı olabilir.]
+
+## 8. 📱 Instagram Story Tanıtım Görselleri (10 Adet)
+
+Aşağıdaki 10 story görseli (dikey/story) formatında hazırlanmalıdır.
+Görseller, Google Gemini (veya eşdeğer bir yapay zekâ görsel üretim aracı) kullanılarak üretilecektir. Üretilen her görselde ürün logosu açık ve görünür biçimde yer almalı, marka kimliği (renk paleti, tipografi, görsel dil) tüm görsellerde tutarlı şekilde yansıtılmalıdır.
+| Story No | İçerik / Konu | Açıklama |
+|----------|--------------|----------|
+| Story 1 | Teaser / Merak Uyandırma | [Yakında bir şey geliyor... tarzı] |
+| Story 2 | Problem Tanımı | [Hangi sorunu çözüyorsunuz?] |
+| Story 3 | Çözüm Tanıtımı | [Ürünü tanıtın] |
+| Story 4 | Öne Çıkan Özellik 1 | [Ana özellik gösterimi] |
+| Story 5 | Öne Çıkan Özellik 2 | [İkinci önemli özellik] |
+| Story 6 | Öne Çıkan Özellik 3 | [Üçüncü önemli özellik] |
+| Story 7 | Free vs Premium Karşılaştırma | [Paket farkları] |
+| Story 8 | Kullanıcı Yorumu / Sosyal Kanıt | [Testimonial veya istatistik] |
+| Story 9 | Nasıl Başlarım? (CTA) | [İndirme / Kayıt adımları] |
+| Story 10 | Lansman / Son Çağrı | [Şimdi dene! Link / QR kod] |
+📁 Görseller: Story görselleri ayrı klasörde (/stories) teslim edilecektir.
+
+## 9. 🎨 Logo Tasarımı
+
+| Alan | Açıklama |
+|------|----------|
+| Logo Tipi | [Logotype /  [Kombinasyon (Logotype + Logomark)] |
+| Ana Renk(ler) | [#8A2BE2 #FFFFFF #E6E6FA ] |
+| Font | [Inria Serif] |
+| İlham Kaynağı | [Logonun merkezinde, Apple'ın yeni tasarım dilini yansıtan, köşeleri yumuşatılmış ve iç içe geçmiş dört adet şeffaf cam panel figürü yer alır. Bu dört panel, kullanıcının her gün aşması gereken "4 kelime" eşiğini simgelerken; camın şeffaflığı bilginin berraklığını, mor renk ise öğrenme tutkusunu temsil eder] |
+| Kullanım Alanları | [Mobil uygulama ikonu, Web arayüzü, Sosyal medya profil görselleri ve dijital uygulama mağazaları (App Store/Play Store).] |
+
+### Teslim Edilecek Logo Formatları:
+
+#### PNG (şeffaf arka plan)
+
+#### Koyu arka plan versiyonu
+
+#### Açık arka plan versiyonu
+
+#### Favicon (32x32 px)
+
+📁 Logolar: Logo dosyaları ayrı klasörde (/logo) teslim edilecektir.
+
+## 10. 📲 Platform Desteği
+
+| Platform | Planlanan | Teknoloji | Açıklama |
+|----------|-----------|-----------|----------|
+| Web Uygulaması | [Evet ] | [...] | [Responsive tasarım detayları] |
+| iOS Uygulaması | [Evet ] | [React Native (Expo)] | [App Store’da yayın, Apple Sign‑In, bildirimlerle günlük kelime hatırlatmaları.] |
+| Android Uygulaması | [Evet ] | [React Native (Expo)] | [Play Store’da yayın, Google hesabı ile giriş, bildirim desteği.] |
+| Tablet Desteği | [Evet ] | [Responsive layout + React Native tablet optimizasyonu] | [Tabletlerde çoklu sütunlu kelime kartı görünümü ve yatay mod için özel arayüz.] |
+
+## ⚠️ ÖNEMLİ UYARILAR — LÜTFEN DİKKATLE OKUYUNUZ
+
+### 📌 Önemli Not 1 — Doküman Gerçekçiliği ve Sorumluluk
+
+Bu doküman, ürün fikrinizin onaylanması için gerekli asgari içeriktir. Tüm alanlar eksiksiz doldurulmalı ve ilgili görseller ile ekran görüntüleri ile desteklenmelidir. README.md dosyasının hazırlığında yapay zekâ araçlarından faydalanılabilir; ancak içeriğin tamamı sizin özgün fikrinize, araştırmanıza ve teknik kapasitenize dayalı olmalıdır.
+Bu doküman, dönem başında GitHub'a yüklenen ilk sürüm olarak kayıt altına alınacak ve dönem sonunda projenin nihai hâliyle birebir karşılaştırılacaktır. Bu nedenle dokümanı son derece titizlikle hazırlayınız. Yapay zekâya yazdırıp dönem içerisinde hayata geçiremeyeceğiniz hiçbir özellik, teknoloji veya kapsam bu dokümanda yer almamalıdır. Burada yazdığınız her maddeyi geliştirmek ve teslim etmekle yükümlüsünüz.
+
+### 📌 Önemli Not 2 — Teknoloji Seçimlerinde Kesinlik
+
+Teknolojik altyapı bölümünde belirsiz, muğlak veya çoklu seçenek içeren ifadeler kabul edilmeyecektir. Her alan için kesin, net ve tek bir teknoloji belirtilmelidir.
+❌ Kabul edilmeyen örnek: "Backend için C# veya Go kullanılacaktır." — "PHP ya da Java tercih edilecektir."
+✅ Kabul edilen örnek: "Backend programlama dili olarak Python kullanılacaktır."
+✅ Kabul edilen örnek: "Backend programlama dili olarak c# kullanılacaktır."
+Hangi teknolojiyi kullanacağınızı bu aşamada kesin olarak belirlemiş ve o teknolojide kendinizi geliştirme planınızı oluşturmuş olmanız gerekmektedir. Yapay zekâ çıktısını okumadan kopyalayıp yapıştırmayınız; seçtiğiniz her teknolojinin ne olduğunu bilmeniz ve savunabilmeniz beklenmektedir.
+
+### 📌 Önemli Not 3 — Docker ile Konteynerizasyon Zorunluluğu
+
+Proje, ilk günden itibaren Docker ile konteynerize edilmiş şekilde geliştirilecektir. GitHub deposundan git pull komutu çalıştırıldığında, projenin aşağıdaki komutlarla sorunsuz biçimde ayağa kalkması beklenmektedir:
+Bu gereksinim dönem boyunca geçerlidir. Her aşamada projenizin çalışır durumda, konteynerize edilmiş ve erişilebilir olması zorunludur. Dockerfile ve docker-compose.yml dosyaları projenin ayrılmaz bileşenleri olarak değerlendirilecek ve proje değerlendirmesinde dikkate alınacaktır.
+📎 Son Hatırlatma: Bu dokümanı dikkatlice doldurunuz, tüm içeriği en az bir kez gözden geçiriniz ve teslim etmeden önce her maddenin eksiksiz olduğundan emin olunuz.
+                    </script>
+
+                    <div id="md-rendered" class="md-prose">
+                        <!-- Marked JS output -->
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <footer class="border-t border-border/50 apple-glass relative z-10 mt-12">
+        <div class="max-w-[1200px] mx-auto px-6 py-10 flex flex-col md:flex-row items-center justify-between gap-6">
+            <div class="flex items-center gap-3">
+                <img src="../logo/favicon.png" alt="logo" class="w-6 h-6 rounded border border-white/20 hidden"
+                    onerror="this.style.display='none'">
+                <p class="text-sm text-muted font-medium">
+                    Copyright © 2026 Nutu. All rights reserved.
+                </p>
+            </div>
+            <div class="flex gap-6 text-xs font-medium text-muted-foreground">
+                <a href="#" class="hover:text-white transition-colors">Privacy Policy</a>
+                <a href="#" class="hover:text-white transition-colors">Terms of Use</a>
+                <a href="#" class="hover:text-white transition-colors">Design Guidelines</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+
+            const mdContent = document.getElementById('md-source').textContent;
+
+            marked.setOptions({
+                gfm: true,
+                breaks: true
+            });
+
+            const renderArea = document.getElementById('md-rendered');
+            renderArea.innerHTML = marked.parse(mdContent);
+
+            // Icon Mapping for a sleek, Apple-like abstract feel
+            const abstractIcons = [
+                'command', 'layers-3', 'globe', ' क्रेडिट-card', 'box', 'bar-chart', 'blocks', 'cpu', 'tablet-smartphone', 'pen-tool'
+            ];
+
+            let h2Count = 0;
+            renderArea.querySelectorAll('h2').forEach((h2) => {
+                // Determine icon
+                let iconName = abstractIcons[h2Count % abstractIcons.length];
+
+                if (h2.textContent.includes('ÖNEMLİ') || h2.textContent.includes('⚠️')) {
+                    iconName = 'alert-circle';
+                } else if (h2.textContent.includes('Domain')) {
+                    iconName = 'globe-2';
+                } else if (h2.textContent.includes('Paket')) {
+                    iconName = 'credit-card';
+                } else if (h2.textContent.includes('Teknolojik')) {
+                    iconName = 'layers';
+                }
+
+                // Clean emojis
+                const rawText = h2.textContent.replace(/⚠️|🏷️|🎨|🌐|💰|📊|🛠️|📱|📲|📌/g, '').replace(/^\d+\.\s*/, '').trim();
+
+                h2.innerHTML = `
+                    <div class="icon-box">
+                        <i data-lucide="${iconName}"></i>
+                    </div> 
+                    <span>${rawText}</span>
+                `;
+                h2Count++;
+            });
+
+            // Smooth element reveals inside the document
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.opacity = '1';
+                        entry.target.style.transform = 'translateY(0)';
+                    }
+                });
+            }, { threshold: 0.1 });
+
+            // Apply to tables and blockquotes
+            renderArea.querySelectorAll('table, blockquote, p:not(:first-child), ul').forEach(el => {
+                el.style.opacity = '0';
+                el.style.transform = 'translateY(15px)';
+                el.style.transition = 'all 0.6s cubic-bezier(0.16, 1, 0.3, 1)';
+                observer.observe(el);
+            });
+
+            lucide.createIcons();
+        });
+    </script>
+</body>
+
+</html>

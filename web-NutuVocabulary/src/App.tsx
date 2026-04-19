@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import type { User } from './types';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
+import { VocabularyProvider } from './context/VocabularyContext';
 
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
@@ -27,9 +29,25 @@ export default function App() {
     localStorage.removeItem('nutu_user');
   };
 
-  if (!user) {
-    return <LoginPage onLogin={handleLogin} />;
-  }
-
-  return <DashboardPage user={user} onLogout={handleLogout} />;
+  return (
+    <VocabularyProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route 
+            path="/login" 
+            element={user ? <Navigate to="/" /> : <LoginPage onLogin={handleLogin} />} 
+          />
+          <Route 
+            path="/" 
+            element={user ? <DashboardPage user={user} onLogout={handleLogout} /> : <Navigate to="/login" />} 
+          />
+          <Route 
+            path="/lists" 
+            element={user ? <DashboardPage user={user} onLogout={handleLogout} /> : <Navigate to="/login" />} 
+          />
+          <Route path="*" element={<Navigate to="/" />} />
+        </Routes>
+      </BrowserRouter>
+    </VocabularyProvider>
+  );
 }

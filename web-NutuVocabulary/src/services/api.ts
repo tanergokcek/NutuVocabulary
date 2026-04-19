@@ -1,5 +1,6 @@
 // API service for fetching word data
 import type { WordCard } from '../types';
+import { CEFR_VOCABULARY, determineLevel } from './cefrData';
 
 const DICTIONARY_API = 'https://api.dictionaryapi.dev/api/v2/entries/en';
 const TRANSLATE_API = 'https://api.mymemory.translated.net/get';
@@ -33,8 +34,6 @@ async function translateToTurkish(text: string): Promise<string> {
 }
 
 async function fetchWordImage(word: string): Promise<string> {
-  // Use picsum.photos with word-based seed for consistent images
-  // Each word gets a unique but reproducible image
   const seed = word.toLowerCase().replace(/[^a-z]/g, '');
   return `https://picsum.photos/seed/${seed}/400/300`;
 }
@@ -42,50 +41,76 @@ async function fetchWordImage(word: string): Promise<string> {
 export async function fetchWordData(word: string): Promise<WordCard | null> {
   try {
     const cleanWord = word.trim().toLowerCase();
+    const storedData = CEFR_VOCABULARY[cleanWord];
+    const level = determineLevel(cleanWord);
 
     // Fetch dictionary data
-    const dictResponse = await fetch(`${DICTIONARY_API}/${encodeURIComponent(cleanWord)}`);
-    if (!dictResponse.ok) {
-      throw new Error('Word not found');
+    let dictData: DictionaryEntry[] = [];
+    try {
+      const dictResponse = await fetch(`${DICTIONARY_API}/${encodeURIComponent(cleanWord)}`);
+      if (dictResponse.ok) {
+        dictData = await dictResponse.json();
+      }
+    } catch (e) {
+      console.warn('Dictionary API error, falling back to stored data', e);
     }
 
-    const dictData: DictionaryEntry[] = await dictResponse.json();
     const entry = dictData[0];
-    
-    if (!entry || !entry.meanings || entry.meanings.length === 0) {
-      throw new Error('No meaning data');
-    }
+    const firstMeaning = entry?.meanings?.[0];
+    const pos = storedData?.pos || firstMeaning?.partOfSpeech || 'noun';
 
-    const firstMeaning = entry.meanings[0];
-    const firstDef = firstMeaning.definitions[0];
+    // Logic to select appropriate definition and example
+    let englishDefinition = storedData?.definition || '';
+    let exampleSentence = storedData?.example || '';
 
-    // Find an example sentence, or create one
-    let exampleSentence = firstDef.example || '';
-    if (!exampleSentence) {
-      // Try to find example from other definitions
-      for (const meaning of entry.meanings) {
-        for (const def of meaning.definitions) {
-          if (def.example) {
-            exampleSentence = def.example;
-            break;
+    if (!englishDefinition || !exampleSentence) {
+      // Find all available definitions and examples
+      const allDefs: string[] = [];
+      const allExamples: string[] = [];
+
+      if (entry) {
+        for (const meaning of entry.meanings) {
+          for (const d of meaning.definitions) {
+            allDefs.push(d.definition);
+            if (d.example) allExamples.push(d.example);
           }
         }
-        if (exampleSentence) break;
+      }
+
+      // If level is A1/A2, pick the SHORTEST definition and example (usually the simplest)
+      // Otherwise pick the longest/most descriptive one
+      if (level === 'A1' || level === 'A2') {
+        if (!englishDefinition && allDefs.length > 0) {
+          englishDefinition = allDefs.reduce((a, b) => a.length <= b.length ? a : b);
+        }
+        if (!exampleSentence && allExamples.length > 0) {
+          exampleSentence = allExamples.reduce((a, b) => a.length <= b.length ? a : b);
+        }
+      } else {
+        if (!englishDefinition && allDefs.length > 0) {
+          englishDefinition = allDefs[0];
+        }
+        if (!exampleSentence && allExamples.length > 0) {
+          exampleSentence = allExamples[0];
+        }
       }
     }
-    if (!exampleSentence) {
-      exampleSentence = `The word "${cleanWord}" is commonly used in everyday English.`;
-    }
+
+    // Fallbacks
+    if (!englishDefinition) englishDefinition = 'A word commonly used in English conversations.';
+    if (!exampleSentence) exampleSentence = `The word "${cleanWord}" is very important to learn.`;
 
     // Get phonetic
-    const phonetic = entry.phonetic || 
-      entry.phonetics?.find(p => p.text)?.text || '';
+    const phonetic = entry?.phonetic || 
+      entry?.phonetics?.find(p => p.text)?.text || '';
 
     // Translate word and example sentence to Turkish
-    const [turkishMeaning, exampleSentenceTurkish] = await Promise.all([
-      translateToTurkish(cleanWord),
+    const [translatedWord, exampleSentenceTurkish] = await Promise.all([
+      storedData?.turkishMeaning ? Promise.resolve(storedData.turkishMeaning) : translateToTurkish(cleanWord),
       translateToTurkish(exampleSentence),
     ]);
+
+    const turkishMeaning = storedData?.turkishMeaning || translatedWord;
 
     // Get image
     const imageUrl = await fetchWordImage(cleanWord);
@@ -94,8 +119,9 @@ export async function fetchWordData(word: string): Promise<WordCard | null> {
       id: `${cleanWord}-${Date.now()}`,
       word: cleanWord,
       phonetic,
-      partOfSpeech: firstMeaning.partOfSpeech,
-      englishDefinition: firstDef.definition,
+      partOfSpeech: pos,
+      level,
+      englishDefinition,
       turkishMeaning,
       exampleSentence,
       exampleSentenceTurkish,

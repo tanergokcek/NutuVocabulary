@@ -4,9 +4,10 @@ import './FlipCard.css';
 
 interface FlipCardProps {
   card: WordCard;
+  onDelete?: (card: WordCard) => void;
 }
 
-export default function FlipCard({ card }: FlipCardProps) {
+export default function FlipCard({ card, onDelete }: FlipCardProps) {
   const [isFlipped, setIsFlipped] = useState(false);
 
   const toggleFlip = useCallback(() => {
@@ -81,15 +82,22 @@ export default function FlipCard({ card }: FlipCardProps) {
           </div>
 
           <div className="flip-card-front-content">
-            <div>
-              <div className="flip-card-word">{card.word}</div>
+            <div className="flip-card-level-tag">
+              {card.level && <span className={`flip-card-level level-${card.level.toLowerCase()}`}>{card.level} Seviyesi</span>}
+            </div>
+
+            <div className="flip-card-main-word-area">
+              <div className="flip-card-word">
+                {card.word} 
+                <span className="flip-card-pos-inline">({card.partOfSpeech})</span>
+              </div>
               {card.phonetic && (
                 <div className="flip-card-phonetic">{card.phonetic}</div>
               )}
             </div>
-            <span className="flip-card-pos">{card.partOfSpeech}</span>
+
             <div className="flip-card-example">
-              Example: {highlightWord(card.exampleSentence, card.word)}
+              <strong>Example:</strong> {highlightWord(card.exampleSentence, card.word)}
             </div>
           </div>
 
@@ -118,7 +126,7 @@ export default function FlipCard({ card }: FlipCardProps) {
             <div className="flip-card-back-text">
               {/* English Definition */}
               <div className="flip-card-definition-block">
-                <span className="flip-card-def-label">English</span>
+                <span className="flip-card-def-label">English:</span>
                 <p className="flip-card-def-text">{card.englishDefinition}</p>
               </div>
 
@@ -126,7 +134,7 @@ export default function FlipCard({ card }: FlipCardProps) {
 
               {/* Turkish Meaning */}
               <div className="flip-card-definition-block">
-                <span className="flip-card-def-label">Turkish</span>
+                <span className="flip-card-def-label">Turkish:</span>
                 <p className="flip-card-def-text flip-card-turkish-meaning">{card.turkishMeaning}</p>
               </div>
 
@@ -168,6 +176,24 @@ export default function FlipCard({ card }: FlipCardProps) {
             <line x1="6" y1="6" x2="18" y2="18" />
           </svg>
         </button>
+        
+        {onDelete && (
+          <button 
+            className="card-action-btn delete-main" 
+            aria-label="Sil" 
+            title="Sil"
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete(card);
+            }}
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="3 6 5 6 21 6" />
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+            </svg>
+          </button>
+        )}
+
         <button className="card-action-btn correct" aria-label="Biliyorum" title="Biliyorum">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="20 6 9 17 4 12" />

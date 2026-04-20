@@ -14,6 +14,9 @@ export interface WordCard {
   createdAt: number;
   deletedAt?: number;
   listIds?: string[]; // IDs of lists this card belongs to
+  starred?: boolean;
+  correctCount?: number;
+  wrongCount?: number;
 }
 
 export interface WordList {

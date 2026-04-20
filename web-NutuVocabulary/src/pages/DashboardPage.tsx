@@ -2,6 +2,7 @@ import { useState, useEffect, type FormEvent } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import type { User, WordCard } from '../types';
 import FlipCard from '../components/FlipCard';
+import StudyMode from '../components/StudyMode';
 import { useVocabulary } from '../context/VocabularyContext';
 import './DashboardPage.css';
 
@@ -16,7 +17,7 @@ export default function DashboardPage({ user, onLogout }: DashboardPageProps) {
   const { 
     cardHistory, trashCards, lists, addWord, createList, 
     toggleCardList, deleteCard, restoreCard, currentCard, setCurrentCard, 
-    permanentlyDelete, archiveCurrentCard
+    permanentlyDelete, archiveCurrentCard, toggleStar
   } = useVocabulary();
 
   const [wordInput, setWordInput] = useState('');
@@ -26,6 +27,7 @@ export default function DashboardPage({ user, onLogout }: DashboardPageProps) {
   const [selectedListId, setSelectedListId] = useState('all');
   const [showTrash, setShowTrash] = useState(false);
   const [isCreatingList, setIsCreatingList] = useState(false);
+  const [isStudying, setIsStudying] = useState(false);
 
   // Sync selected list based on URL
   useEffect(() => {
@@ -225,12 +227,38 @@ export default function DashboardPage({ user, onLogout }: DashboardPageProps) {
                   {selectedListId === 'all' ? 'Tüm Kartlarınız' : `"${lists.find(l => l.id === selectedListId)?.name}" Listesi`}
                 </h2>
                 <p className="subtitle">{filteredHistory.length} Kelime bulundu</p>
+
+                <div className="list-study-action" style={{ marginTop: '1.5rem' }}>
+                  {filteredHistory.length >= 2 ? (
+                    <button 
+                      className="btn btn-primary study-start-btn" 
+                      onClick={() => setIsStudying(true)}
+                    >
+                      <span className="btn-icon">📖</span>
+                      Çalışmaya Başla
+                    </button>
+                  ) : (
+                    <button 
+                      className="btn btn-glass study-add-more-btn" 
+                      onClick={() => navigate('/')}
+                    >
+                      <span className="btn-icon">➕</span>
+                      {filteredHistory.length === 1 ? '1 kelime daha ekle ve çalışmaya başla' : 'Kelime ekle ve çalışmaya başla'}
+                    </button>
+                  )}
+                </div>
               </header>
 
               <div className="history-cards-grid">
                 {filteredHistory.map(card => (
                   <div key={card.id} className="history-card-mini glass-panel" onClick={() => handleHistoryCardClick(card)}>
                     <button className="history-card-delete" onClick={(e) => { e.stopPropagation(); deleteCard(card); }}>✕</button>
+                    <button 
+                      className={`history-card-star ${card.starred ? 'active' : ''}`} 
+                      onClick={(e) => { e.stopPropagation(); toggleStar(card.id); }}
+                    >
+                      {card.starred ? '★' : '☆'}
+                    </button>
                     <div className="mini-word">{card.word}</div>
                     <div className="mini-pos">{card.partOfSpeech}</div>
                     <div className="mini-def">{card.turkishMeaning}</div>
@@ -297,6 +325,12 @@ export default function DashboardPage({ user, onLogout }: DashboardPageProps) {
           )}
         </main>
       </div>
+      {isStudying && (
+        <StudyMode 
+          cards={filteredHistory} 
+          onClose={() => setIsStudying(false)} 
+        />
+      )}
     </div>
   );
 }

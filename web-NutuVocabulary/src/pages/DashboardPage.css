@@ -72,6 +72,57 @@
   gap: var(--space-xs);
 }
 
+.history-card-mini {
+  position: relative;
+  padding: var(--space-lg);
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  min-height: 140px;
+}
+
+.history-card-star {
+  position: absolute;
+  top: 10px;
+  right: 40px;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  padding: 4px;
+}
+
+.history-card-star.active {
+  color: #FBBF24;
+  text-shadow: 0 0 8px rgba(251, 191, 36, 0.4);
+}
+
+.history-card-star:hover {
+  transform: scale(1.2);
+}
+
+.history-card-delete {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  cursor: pointer;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all var(--transition-fast);
+}
+
 .sidebar-list-item {
   display: flex;
   align-items: center;
@@ -199,16 +250,26 @@
 .mini-card-lists {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
-  margin-top: var(--space-sm);
+  gap: 6px;
+  margin-top: auto;
+  padding-top: var(--space-sm);
 }
 
 .mini-list-tag {
-  font-size: 0.65rem;
-  padding: 2px 6px;
+  font-size: 0.7rem;
+  padding: 2px 8px;
   background: rgba(255, 255, 255, 0.05);
-  color: var(--text-muted);
-  border-radius: 2px;
+  border-radius: 4px;
+  color: var(--text-secondary);
+}
+
+.study-start-btn, .study-add-more-btn {
+  gap: var(--space-sm);
+  padding: var(--space-md) var(--space-2xl);
+}
+
+.btn-icon {
+  font-size: 1.1rem;
 }
 
 /* Responsive with Sidebar */

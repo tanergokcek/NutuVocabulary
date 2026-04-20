@@ -15,6 +15,8 @@ interface VocabularyContextType {
   currentCard: WordCard | null;
   setCurrentCard: (card: WordCard | null) => void;
   archiveCurrentCard: () => void;
+  toggleStar: (cardId: string) => void;
+  updateWordCounts: (cardId: string, type: 'correct' | 'wrong') => void;
 }
 
 const VocabularyContext = createContext<VocabularyContextType | undefined>(undefined);
@@ -36,9 +38,25 @@ export function VocabularyProvider({ children }: { children: React.ReactNode }) 
 
   const [lists, setLists] = useState<WordList[]>(() => {
     const saved = localStorage.getItem('nutu_lists');
-    return saved ? JSON.parse(saved) : [
-      { id: 'all', name: 'Tüm Kelimeler', color: '#A855F7', createdAt: 0 }
+    let currentLists: WordList[] = saved ? JSON.parse(saved) : [];
+    
+    const defaults: WordList[] = [
+      { id: 'all', name: 'Tüm Kelimeler', color: '#A855F7', createdAt: 0 },
+      { id: 'starred', name: 'Yıldızladığım Kelimeler', color: '#EF4444', createdAt: 1 },
+      { id: 'a1', name: 'a1', color: '#EC4899', createdAt: 2 },
+      { id: 'a2', name: 'a2', color: '#3B82F6', createdAt: 3 },
+      { id: 'b1', name: 'b1', color: '#10B981', createdAt: 4 },
+      { id: 'b2', name: 'b2', color: '#F59E0B', createdAt: 5 },
     ];
+
+    // Ensure all defaults exist
+    defaults.forEach(def => {
+      if (!currentLists.find(l => l.id === def.id)) {
+        currentLists.push(def);
+      }
+    });
+
+    return currentLists;
   });
 
   useEffect(() => {
@@ -119,11 +137,37 @@ export function VocabularyProvider({ children }: { children: React.ReactNode }) 
     setTrashCards(prev => prev.filter(c => c.id !== cardId));
   };
 
+  const toggleStar = (cardId: string) => {
+    const update = (card: WordCard) => {
+      const isStarred = !card.starred;
+      const currentLists = card.listIds || [];
+      const newListIds = isStarred 
+        ? (currentLists.includes('starred') ? currentLists : [...currentLists, 'starred'])
+        : currentLists.filter(id => id !== 'starred');
+      
+      return { ...card, starred: isStarred, listIds: newListIds };
+    };
+
+    setCardHistory(prev => prev.map(c => c.id === cardId ? update(c) : c));
+    if (currentCard?.id === cardId) setCurrentCard(update(currentCard));
+  };
+
+  const updateWordCounts = (cardId: string, type: 'correct' | 'wrong') => {
+    const update = (card: WordCard) => ({
+      ...card,
+      correctCount: (card.correctCount || 0) + (type === 'correct' ? 1 : 0),
+      wrongCount: (card.wrongCount || 0) + (type === 'wrong' ? 1 : 0)
+    });
+
+    setCardHistory(prev => prev.map(c => c.id === cardId ? update(c) : c));
+    if (currentCard?.id === cardId) setCurrentCard(update(currentCard));
+  };
+
   return (
     <VocabularyContext.Provider value={{
       cardHistory, trashCards, lists, addWord, createList, 
       toggleCardList, deleteCard, restoreCard, permanentlyDelete,
-      currentCard, setCurrentCard, archiveCurrentCard
+      currentCard, setCurrentCard, archiveCurrentCard, toggleStar, updateWordCounts
     }}>
       {children}
     </VocabularyContext.Provider>

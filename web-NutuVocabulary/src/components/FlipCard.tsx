@@ -1,18 +1,24 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { WordCard } from '../types';
+import { useVocabulary } from '../context/VocabularyContext';
+import ImageSearchModal from './ImageSearchModal';
 import './FlipCard.css';
 
 interface FlipCardProps {
   card: WordCard;
   onDelete?: (card: WordCard) => void;
+  showStudyActions?: boolean;
 }
 
-export default function FlipCard({ card, onDelete }: FlipCardProps) {
+export default function FlipCard({ card, onDelete, showStudyActions = false }: FlipCardProps) {
   const [isFlipped, setIsFlipped] = useState(false);
+  const [isSearchingImage, setIsSearchingImage] = useState(false);
+  const { updateCardImage } = useVocabulary();
 
   const toggleFlip = useCallback(() => {
+    if (isSearchingImage) return;
     setIsFlipped(prev => !prev);
-  }, []);
+  }, [isSearchingImage]);
 
   // Reset flip state when card changes
   useEffect(() => {
@@ -22,6 +28,7 @@ export default function FlipCard({ card, onDelete }: FlipCardProps) {
   // Keyboard support: Space to flip
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (isSearchingImage) return;
       if (e.code === 'Space' && 
           !(e.target instanceof HTMLInputElement) && 
           !(e.target instanceof HTMLTextAreaElement)) {
@@ -32,10 +39,11 @@ export default function FlipCard({ card, onDelete }: FlipCardProps) {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [toggleFlip]);
+  }, [toggleFlip, isSearchingImage]);
 
   // Highlight the word in the example sentence
   const highlightWord = (sentence: string, word: string) => {
+    if (!sentence || !word) return sentence;
     const regex = new RegExp(`(${word})`, 'gi');
     const parts = sentence.split(regex);
     return parts.map((part, i) =>
@@ -52,8 +60,21 @@ export default function FlipCard({ card, onDelete }: FlipCardProps) {
     speechSynthesis.speak(utterance);
   };
 
+  const handleSelectImage = (url: string) => {
+    updateCardImage(card.id, url);
+    setIsSearchingImage(false);
+  };
+
   return (
     <div className="flip-card-wrapper">
+      {isSearchingImage && (
+        <ImageSearchModal 
+          word={card.word}
+          onSelect={handleSelectImage}
+          onClose={() => setIsSearchingImage(false)}
+        />
+      )}
+
       <div
         className={`flip-card ${isFlipped ? 'is-flipped' : ''}`}
         onClick={toggleFlip}
@@ -124,7 +145,6 @@ export default function FlipCard({ card, onDelete }: FlipCardProps) {
 
           <div className="flip-card-back-content">
             <div className="flip-card-back-text">
-              {/* English Definition */}
               <div className="flip-card-definition-block">
                 <span className="flip-card-def-label">English:</span>
                 <p className="flip-card-def-text">{card.englishDefinition}</p>
@@ -132,7 +152,6 @@ export default function FlipCard({ card, onDelete }: FlipCardProps) {
 
               <hr className="flip-card-def-divider" />
 
-              {/* Turkish Meaning */}
               <div className="flip-card-definition-block">
                 <span className="flip-card-def-label">Turkish:</span>
                 <p className="flip-card-def-text flip-card-turkish-meaning">{card.turkishMeaning}</p>
@@ -140,7 +159,6 @@ export default function FlipCard({ card, onDelete }: FlipCardProps) {
 
               <hr className="flip-card-def-divider" />
 
-              {/* Turkish translation of example */}
               <div className="flip-card-definition-block">
                 <span className="flip-card-def-label">Türkçesi</span>
                 <p className="flip-card-def-text" style={{ fontSize: '0.88rem' }}>{card.exampleSentenceTurkish}</p>
@@ -148,18 +166,29 @@ export default function FlipCard({ card, onDelete }: FlipCardProps) {
             </div>
 
             {/* Image */}
-            {card.imageUrl && (
-              <div className="flip-card-back-image">
-                <img
-                  src={card.imageUrl}
-                  alt={`${card.word} görseli`}
-                  loading="lazy"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).style.display = 'none';
-                  }}
-                />
-              </div>
-            )}
+            <div className="flip-card-back-image-container">
+              <img
+                src={card.imageUrl}
+                alt={`${card.word} görseli`}
+                loading="lazy"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = 'https://via.placeholder.com/200x150?text=Resim+Yok';
+                }}
+              />
+              <button 
+                className="card-edit-image-btn"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsSearchingImage(true);
+                }}
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{width: 14, height: 14}}>
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                </svg>
+                Düzenle
+              </button>
+            </div>
           </div>
 
           <div className="flip-card-back-footer">
@@ -170,12 +199,14 @@ export default function FlipCard({ card, onDelete }: FlipCardProps) {
 
       {/* Action buttons */}
       <div className="flip-card-actions">
-        <button className="card-action-btn wrong" aria-label="Bilmiyorum" title="Bilmiyorum">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <line x1="18" y1="6" x2="6" y2="18" />
-            <line x1="6" y1="6" x2="18" y2="18" />
-          </svg>
-        </button>
+        {showStudyActions && (
+          <button className="card-action-btn wrong" aria-label="Bilmiyorum" title="Bilmiyorum">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        )}
         
         {onDelete && (
           <button 
@@ -194,11 +225,13 @@ export default function FlipCard({ card, onDelete }: FlipCardProps) {
           </button>
         )}
 
-        <button className="card-action-btn correct" aria-label="Biliyorum" title="Biliyorum">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="20 6 9 17 4 12" />
-          </svg>
-        </button>
+        {showStudyActions && (
+          <button className="card-action-btn correct" aria-label="Biliyorum" title="Biliyorum">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          </button>
+        )}
       </div>
     </div>
   );

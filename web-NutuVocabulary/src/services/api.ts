@@ -1,6 +1,6 @@
-// API service for fetching word data
 import type { WordCard } from '../types';
 import { CEFR_VOCABULARY, determineLevel } from './cefrData';
+import { A1_SECTION_1 } from './a1Data';
 
 const DICTIONARY_API = 'https://api.dictionaryapi.dev/api/v2/entries/en';
 const TRANSLATE_API = 'https://api.mymemory.translated.net/get';
@@ -33,7 +33,7 @@ async function translateToTurkish(text: string): Promise<string> {
   }
 }
 
-async function fetchWordImage(word: string): Promise<string> {
+export async function fetchWordImage(word: string): Promise<string> {
   const seed = word.toLowerCase().replace(/[^a-z]/g, '');
   return `https://picsum.photos/seed/${seed}/400/300`;
 }
@@ -41,6 +41,26 @@ async function fetchWordImage(word: string): Promise<string> {
 export async function fetchWordData(word: string): Promise<WordCard | null> {
   try {
     const cleanWord = word.trim().toLowerCase();
+    
+    // Check our A1 Section 1 data first
+    const a1Word = A1_SECTION_1[cleanWord];
+    if (a1Word) {
+        const imageUrl = await fetchWordImage(cleanWord);
+        return {
+            id: `${cleanWord}-${Date.now()}`,
+            word: cleanWord,
+            phonetic: '', // A1 data doesn't have phonetic yet
+            partOfSpeech: a1Word.pos,
+            level: 'A1',
+            englishDefinition: a1Word.definition,
+            turkishMeaning: a1Word.turkishMeaning,
+            exampleSentence: a1Word.example,
+            exampleSentenceTurkish: a1Word.exampleTurkish || '',
+            imageUrl,
+            createdAt: Date.now()
+        };
+    }
+
     const storedData = CEFR_VOCABULARY[cleanWord];
     const level = determineLevel(cleanWord);
 

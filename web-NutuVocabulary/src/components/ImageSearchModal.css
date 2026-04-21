@@ -1,0 +1,119 @@
+.image-search-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(8px);
+  z-index: 3000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.image-search-modal {
+  width: 90%;
+  max-width: 600px;
+  background: rgba(30, 24, 52, 0.95);
+  padding: 32px;
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 50px 100px -20px rgba(0, 0, 0, 0.7);
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.search-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.search-modal-header h3 {
+  font-family: var(--font-serif);
+  font-size: 1.4rem;
+  margin: 0;
+  color: white;
+}
+
+.close-modal-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: none;
+  color: #94a3b8;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.close-modal-btn:hover {
+  background: rgba(239, 68, 68, 0.2);
+  color: #EF4444;
+}
+
+.search-modal-form {
+  display: flex;
+  gap: 12px;
+}
+
+.search-modal-form input {
+  flex: 1;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 12px 16px;
+  border-radius: 12px;
+  color: white;
+  outline: none;
+}
+
+.search-modal-form button {
+  background: #A855F7;
+  color: white;
+  border: none;
+  padding: 0 24px;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.search-modal-form button:hover {
+  background: #B45BFF;
+  box-shadow: 0 0 20px rgba(168, 85, 247, 0.4);
+}
+
+.search-modal-results {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  max-height: 400px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.modal-result-item {
+  aspect-ratio: 3/2;
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: all 0.3s;
+}
+
+.modal-result-item:hover {
+  transform: scale(1.05);
+  border-color: #A855F7;
+}
+
+.modal-result-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.modal-placeholder, .modal-loader {
+  grid-column: span 3;
+  padding: 40px;
+  text-align: center;
+  color: #94a3b8;
+}

@@ -4,6 +4,7 @@
 export interface CEFRWord {
   level: string;
   example: string;
+  exampleTurkish?: string;
   definition: string;
   pos: string;
   turkishMeaning: string;

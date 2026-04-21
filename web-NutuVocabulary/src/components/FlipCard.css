@@ -274,6 +274,54 @@
   margin: var(--space-xs) 0;
 }
 
+.flip-card-back-image-container {
+  flex: 0 0 320px;
+  height: 260px;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  position: relative;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+}
+
+.flip-card-back-image-container img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.card-edit-image-btn {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  opacity: 0;
+  transform: translateY(5px);
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.flip-card-back-image-container:hover .card-edit-image-btn {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.card-edit-image-btn:hover {
+  background: var(--color-vivid-violet);
+  border-color: var(--color-vivid-violet);
+  transform: scale(1.05);
+}
+
 .flip-card-back-image {
   flex: 0 0 40%;
   display: flex;
